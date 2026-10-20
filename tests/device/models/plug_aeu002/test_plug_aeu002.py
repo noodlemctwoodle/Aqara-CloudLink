@@ -39,8 +39,9 @@ def _reset_catalog():
 @pytest.mark.parametrize("rid", sorted(METERS))
 def test_meter_is_catalogued_as_cloud_polled_sensor(rid: str) -> None:
     name, endpoint, device_class, state_class, unit = METERS[rid]
-    spec = catalog.all_traits_for_model(MODEL)[rid]
+    spec = catalog.get_trait(MODEL, rid)
 
+    assert spec is not None
     assert spec.cloud_poll is True
     assert spec.id == spec.wire_path == rid
     assert spec.name == name
@@ -77,11 +78,10 @@ def test_meter_builds_sensor_descriptor(rid: str) -> None:
 
 
 def test_unsupported_voltage_is_dropped() -> None:
-    traits = catalog.all_traits_for_model(MODEL)
-    assert "1.140.32944" not in traits
+    assert catalog.get_trait(MODEL, "1.140.32944") is None
     # The device-level power and energy on the same cluster stay.
-    assert "1.140.32945" in traits
-    assert "1.140.32946" in traits
+    assert catalog.get_trait(MODEL, "1.140.32945") is not None
+    assert catalog.get_trait(MODEL, "1.140.32946") is not None
 
 
 def test_no_voltage_descriptor_is_built() -> None:
@@ -89,3 +89,11 @@ def test_no_voltage_descriptor_is_built() -> None:
     assert "auto_1_140_32944" not in keys
     assert "auto_1_140_32945" in keys
 
+
+
+
+def test_display_metadata_unchanged() -> None:
+    meta = catalog.get_display_metadata(MODEL)
+    assert meta is not None
+    assert meta.manufacturer == "Aqara"
+    assert meta.display_name == "Wall Outlet H2"

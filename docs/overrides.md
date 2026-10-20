@@ -191,6 +191,49 @@ here, and a maintainer folds confirmed entries into the model's `data.json`
 discovering the rid for a setting via the `scan_device` resource-ID discovery
 notification.
 
+## Cloud-polled values: `cloud_poll`
+
+Some values a device measures are never served over LANLink - not as wire
+paths and not as resource IDs - but the Aqara cloud has them, because that is
+where the Aqara Home app reads them from. Per-outlet metering on
+`lumi.plug.aeu002` is the example: the hub only exposes the device totals.
+
+Set `cloud_poll=True` on a `TraitSpec` in `OVERRIDES` to read such a value
+from the cloud instead. The key, `id` and `wire_path` are the value's legacy
+resource ID, as the app requests it:
+
+```python
+OVERRIDES: dict[str, TraitSpec | None] = {
+    "8.0.2293": TraitSpec(
+        id="8.0.2293", name="Socket 1 power", wire_path="8.0.2293",
+        data_type="float", endpoint_id=2, platform="sensor",
+        device_class="power", state_class="measurement",
+        unit_of_measurement="W", cloud_poll=True,
+    ),
+}
+```
+
+At setup the integration reads these values with the cloud's
+`view/data/query/new` call and seeds the entities, then re-reads them every
+60 seconds and delivers them through the same report path as a LANLink push.
+They are kept out of the trait subscribe and seed, which only accepts wire
+paths.
+
+Period totals the app shows (today, this month) are read with the app's
+statistics keys, a period prefix on the resource ID: `1d_0_0.<rid>` for today
+and `month_0_0.<rid>` for this month. A key containing `_` is read with the
+cloud's `statisticsMethod`; plain resource IDs are read as current values.
+These keys are not three-part numeric wire paths, so they sit outside the usual
+`OVERRIDES` key format.
+
+- Use it only for values the hub does not serve: confirm the value is absent
+  over LANLink first. Cloud-polled values need the cloud session and lag by up
+  to one poll interval.
+- `endpoint_id` attaches the entity to the right endpoint; it does not have to
+  match the first component of the resource ID.
+- The resource ID usually comes from watching the Aqara Home app read the
+  value; `scan_device` does not report these IDs.
+
 ## Limitations
 
 - **Fused entities can't be reshaped.** Endpoints whose composer merges
