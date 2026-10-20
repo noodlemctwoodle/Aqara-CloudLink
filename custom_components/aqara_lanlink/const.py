@@ -74,6 +74,10 @@ DEFAULT_HUB_MODEL = "lumi.gateway.agl004"
 # binary sensor as its staleness threshold.
 PUSH_STALL_TTL_SECONDS = 300.0
 
+# Poll interval (seconds) for cloud-polled traits (TraitSpec.cloud_poll): values
+# the hub never serves over LANLink, read from the Aqara cloud by resource id.
+CLOUD_POLL_INTERVAL_SECONDS = 60.0
+
 # Aqara cloud regions, in the order the Aqara apps display them. The
 # legacy RPC `cloud_client.AREAS` table is the authoritative mapping;
 # this tuple is here so the config flow can offer a closed selector

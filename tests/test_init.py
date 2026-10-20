@@ -9,18 +9,25 @@ forwarding, and unload.
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.aqara_lanlink import (
     AqaraLanLinkRuntimeData,
+    _cloud_poll_rids,
+    _poll_cloud_traits,
     async_setup_entry,
     async_unload_entry,
 )
 from custom_components.aqara_lanlink.const import (
+    CLOUD_POLL_INTERVAL_SECONDS,
     CONF_AQARA_REGION,
     CONF_AQARA_TOKEN,
     CONF_AQARA_USER_ID,
@@ -32,9 +39,12 @@ from custom_components.aqara_lanlink.const import (
     DOMAIN,
     PLATFORMS,
 )
+from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqara_lanlink.hub.cloud_client import AqaraCloudAuthError
 from custom_components.aqara_lanlink.hub.rearm import RearmManager
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.util import dt as dt_util
 
 
 # -----------------------------------------------------------------------------
@@ -1663,3 +1673,353 @@ async def test_setup_skips_composite_with_unknown_codec(
 
     assert result is True
     assert ("lumi1.COMP", rid) not in entry.runtime_data.composite_controllers
+
+
+# -----------------------------------------------------------------------------
+# Cloud-polled traits (TraitSpec.cloud_poll): values the hub never serves over
+# LANLink, read from the Aqara cloud by resource id (e.g. per-outlet metering
+# on lumi.plug.aeu002).
+# -----------------------------------------------------------------------------
+
+_PLUG_METER_VALUES = {
+    "0.17.85": "113621.640625",
+    "0.18.85": "9964.890625",
+    "8.0.2293": "1353.000000",
+    "8.0.2304": "0.000000",
+}
+
+
+_PLUG_PERIOD_VALUES = {
+    "1d_0_0.17.85": "91.210935",
+    "month_0_0.17.85": "1386.468748",
+    "1d_0_0.18.85": "0.0",
+    "month_0_0.18.85": "25.59668",
+}
+
+
+def _plug_cloud() -> MagicMock:
+    """Fake cloud client for a lumi.plug.aeu002 setup pass."""
+    fake_cloud = MagicMock()
+    fake_cloud.query_collection_panels = AsyncMock(return_value={})
+    fake_cloud.query_device_traits = AsyncMock(return_value=[])
+    fake_cloud.query_resources_by_rid = AsyncMock(return_value={})
+    fake_cloud.query_view_data = AsyncMock(side_effect=_plug_view_data)
+    return fake_cloud
+
+
+async def _plug_view_data(token, did, keys, process_method="presentValueMethod"):
+    """Answer like view/data/query/new: current values or period totals."""
+    source = (
+        _PLUG_PERIOD_VALUES if process_method == "statisticsMethod"
+        else _PLUG_METER_VALUES
+    )
+    return {k: v for k, v in source.items() if k in keys}
+
+
+def test_cloud_poll_rids_selects_only_cloud_poll_traits() -> None:
+    traits = {
+        "8.0.2293": TraitSpec(
+            id="8.0.2293", name="Socket 1 power", wire_path="8.0.2293",
+            platform="sensor", cloud_poll=True,
+        ),
+        "0.17.85": TraitSpec(
+            id="0.17.85", name="Socket 1 energy", wire_path="0.17.85",
+            platform="sensor", cloud_poll=True,
+        ),
+        "1.140.32945": TraitSpec(
+            id="1.140.32945", name="Current power", wire_path="1.140.32945",
+        ),
+    }
+    assert _cloud_poll_rids(traits) == ["0.17.85", "8.0.2293"]
+
+
+async def test_poll_cloud_traits_seed_stages_initial_values() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(
+        return_value={"0.17.85": "113621.64", "8.0.2293": "0.0"},
+    )
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=device, did="lumi1.plug",
+        rids=["0.17.85", "8.0.2293"], seed=True,
+    )
+
+    cloud.query_view_data.assert_awaited_once_with(
+        "tok", "lumi1.plug", ["0.17.85", "8.0.2293"],
+    )
+    device.seed_initial_value.assert_any_call("0.17.85", "113621.64")
+    device.seed_initial_value.assert_any_call("8.0.2293", "0.0")
+    device.handle_report.assert_not_called()
+
+
+async def test_poll_cloud_traits_delivers_through_handle_report() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(return_value={"8.0.2293": "1353.0"})
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=device, did="lumi1.plug",
+        rids=["8.0.2293"],
+    )
+
+    device.handle_report.assert_called_once()
+    report = device.handle_report.call_args.args[0]
+    assert report.values == {"8.0.2293": "1353.0"}
+    device.seed_initial_value.assert_not_called()
+
+
+async def test_poll_cloud_traits_reads_period_totals_with_statistics_method() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(side_effect=_plug_view_data)
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=device, did="lumi1.plug",
+        rids=["0.17.85", "1d_0_0.17.85", "month_0_0.17.85"],
+    )
+
+    assert cloud.query_view_data.await_args_list == [
+        call("tok", "lumi1.plug", ["0.17.85"]),
+        call(
+            "tok", "lumi1.plug", ["1d_0_0.17.85", "month_0_0.17.85"],
+            process_method="statisticsMethod",
+        ),
+    ]
+    report = device.handle_report.call_args.args[0]
+    assert report.values == {
+        "0.17.85": "113621.640625",
+        "1d_0_0.17.85": "91.210935",
+        "month_0_0.17.85": "1386.468748",
+    }
+
+
+async def test_poll_cloud_traits_period_totals_only_skips_present_read() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(side_effect=_plug_view_data)
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=MagicMock(), did="lumi1.plug",
+        rids=["month_0_0.18.85"],
+    )
+
+    cloud.query_view_data.assert_awaited_once_with(
+        "tok", "lumi1.plug", ["month_0_0.18.85"],
+        process_method="statisticsMethod",
+    )
+
+
+async def test_poll_cloud_traits_empty_result_delivers_nothing() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(return_value={})
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=device, did="lumi1.plug",
+        rids=["8.0.2293"],
+    )
+
+    device.handle_report.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("has_cloud", "token", "rids"),
+    [
+        (False, "tok", ["0.17.85"]),
+        (True, "", ["0.17.85"]),
+        (True, "tok", []),
+    ],
+)
+async def test_poll_cloud_traits_noop_without_cloud_token_or_rids(
+    has_cloud, token, rids,
+) -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock()
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud if has_cloud else None, token=token, device=device,
+        did="lumi1.plug", rids=rids,
+    )
+
+    cloud.query_view_data.assert_not_awaited()
+    device.handle_report.assert_not_called()
+    device.seed_initial_value.assert_not_called()
+
+
+async def test_poll_cloud_traits_auth_error_propagates() -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(
+        side_effect=AqaraCloudAuthError("token expired"),
+    )
+
+    with pytest.raises(AqaraCloudAuthError):
+        await _poll_cloud_traits(
+            cloud=cloud, token="tok", device=MagicMock(), did="lumi1.plug",
+            rids=["8.0.2293"],
+        )
+
+
+async def test_poll_cloud_traits_other_error_is_logged_and_swallowed(
+    caplog,
+) -> None:
+    cloud = MagicMock()
+    cloud.query_view_data = AsyncMock(side_effect=RuntimeError("boom"))
+    device = MagicMock()
+
+    await _poll_cloud_traits(
+        cloud=cloud, token="tok", device=device, did="lumi1.plug",
+        rids=["8.0.2293"],
+    )
+
+    assert "cloud poll: read failed for did=lumi1.plug" in caplog.text
+    device.handle_report.assert_not_called()
+
+
+async def test_setup_seeds_cloud_poll_traits_and_keeps_them_out_of_trait_subscribe(
+    hass, patch_clientsession,
+) -> None:
+    """At setup, the plug's per-outlet meters are read with query_view_data and
+    staged as seeds; their rids are never sent to the trait subscribe+seed,
+    which only accepts trait paths.
+    """
+    entry = _hub_entry(hass)
+    sub = _make_subentry(
+        subentry_id="sub-plug", did="lumi1.plug", model="lumi.plug.aeu002",
+    )
+    _attach_subentries(entry, {sub.subentry_id: sub})
+
+    coord = _make_coordinator_mock()
+    fake_cloud = _plug_cloud()
+
+    seeded: list = []
+
+    def _capture_seed(path, value):
+        seeded.append((path, value))
+
+    with patch(
+        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+    ), patch(
+        "custom_components.aqara_lanlink.AqaraCloudClient",
+        return_value=fake_cloud,
+    ), patch.object(
+        hass.config_entries, "async_forward_entry_setups",
+        new=AsyncMock(return_value=True),
+    ), patch(
+        "custom_components.aqara_lanlink.device.base.Device.seed_initial_value",
+        side_effect=_capture_seed,
+    ):
+        result = await async_setup_entry(hass, entry)
+
+    assert result is True
+    plug_calls = [
+        c for c in fake_cloud.query_view_data.await_args_list
+        if c.args[1] == "lumi1.plug"
+    ]
+    present = [c for c in plug_calls if "process_method" not in c.kwargs]
+    periods = [
+        c for c in plug_calls
+        if c.kwargs.get("process_method") == "statisticsMethod"
+    ]
+    assert len(present) == 1 and len(periods) == 1, plug_calls
+    assert present[0].args[2] == sorted(_PLUG_METER_VALUES)
+    assert periods[0].args[2] == sorted(_PLUG_PERIOD_VALUES)
+    for rid, value in {**_PLUG_METER_VALUES, **_PLUG_PERIOD_VALUES}.items():
+        assert (rid, value) in seeded
+
+    subscribed = {
+        path
+        for c in fake_cloud.query_device_traits.await_args_list
+        if c.args[1] == "lumi1.plug"
+        for path in c.args[2]
+    }
+    assert subscribed, "the plug's catalogue trait paths must still subscribe"
+    assert subscribed.isdisjoint({**_PLUG_METER_VALUES, **_PLUG_PERIOD_VALUES})
+
+
+async def test_setup_skips_cloud_poll_without_cloud_token(
+    hass, patch_clientsession,
+) -> None:
+    """With no cloud token there is no cloud source: no read, setup proceeds."""
+    entry = _hub_entry(hass)
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_AQARA_TOKEN: ""},
+    )
+    sub = _make_subentry(
+        subentry_id="sub-plug", did="lumi1.plug", model="lumi.plug.aeu002",
+    )
+    _attach_subentries(entry, {sub.subentry_id: sub})
+
+    coord = _make_coordinator_mock()
+    fake_cloud = _plug_cloud()
+    fake_cloud.query_view_data = AsyncMock(
+        side_effect=AssertionError("query_view_data called without token"),
+    )
+
+    with patch(
+        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+    ), patch(
+        "custom_components.aqara_lanlink.AqaraCloudClient",
+        return_value=fake_cloud,
+    ), patch.object(
+        hass.config_entries, "async_forward_entry_setups",
+        new=AsyncMock(return_value=True),
+    ):
+        result = await async_setup_entry(hass, entry)
+
+    assert result is True
+    fake_cloud.query_view_data.assert_not_called()
+
+
+async def test_cloud_poll_interval_refreshes_values_through_handle_report(
+    hass, patch_clientsession,
+) -> None:
+    """After setup, each poll interval re-reads the meters and delivers them
+    through Device.handle_report, the same path as a LANLink push.
+    """
+    entry = _hub_entry(hass)
+    sub = _make_subentry(
+        subentry_id="sub-plug", did="lumi1.plug", model="lumi.plug.aeu002",
+    )
+    _attach_subentries(entry, {sub.subentry_id: sub})
+
+    coord = _make_coordinator_mock()
+    fake_cloud = _plug_cloud()
+
+    reports: list = []
+
+    def _capture_report(report):
+        reports.append(dict(report.values))
+
+    with patch(
+        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+    ), patch(
+        "custom_components.aqara_lanlink.AqaraCloudClient",
+        return_value=fake_cloud,
+    ), patch.object(
+        hass.config_entries, "async_forward_entry_setups",
+        new=AsyncMock(return_value=True),
+    ), patch(
+        "custom_components.aqara_lanlink.device.base.Device.handle_report",
+        side_effect=_capture_report,
+    ):
+        assert await async_setup_entry(hass, entry) is True
+        fake_cloud.query_view_data.reset_mock(side_effect=True)
+        fake_cloud.query_view_data.return_value = {"8.0.2293": "26.000000"}
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=CLOUD_POLL_INTERVAL_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    plug_calls = [
+        c for c in fake_cloud.query_view_data.await_args_list
+        if c.args[1] == "lumi1.plug"
+    ]
+    assert len(plug_calls) == 2, plug_calls
+    assert any(
+        c.kwargs.get("process_method") == "statisticsMethod" for c in plug_calls
+    )
+    assert {"8.0.2293": "26.000000"} in reports
+

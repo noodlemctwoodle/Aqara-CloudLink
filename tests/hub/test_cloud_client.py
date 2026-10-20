@@ -1279,6 +1279,137 @@ class TestQueryResourcesByRid:
 
 
 # =============================================================================
+# query_view_data - POST /app/v1.0/lumi/app/view/data/query/new
+# =============================================================================
+
+
+def _view_data_response(items):
+    return _fake_response(json.dumps({
+        "result": {"data": items, "name": "Kitchen Power Socket", "state": 1},
+        "code": 0,
+    }))
+
+
+class TestQueryViewData:
+    async def test_parses_result_data_into_key_value_map(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_view_data_response([
+            {"dataKey": "0.17.85", "time": 1792531000916, "value": "113621.640625"},
+            {"dataKey": "8.0.2293", "time": 1792530938455, "value": "0.000000"},
+        ]))
+        client = AqaraCloudClient(region="EU", session=session)
+
+        result = await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["0.17.85", "8.0.2293"],
+        )
+        assert result == {"0.17.85": "113621.640625", "8.0.2293": "0.000000"}
+
+    async def test_sends_post_to_correct_url_with_keys_in_body(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_view_data_response([]))
+        client = AqaraCloudClient(region="EU", session=session)
+        await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["0.17.85", "8.0.2293"],
+        )
+
+        method = session.request.call_args.args[0]
+        url = session.request.call_args.args[1]
+        assert method == "POST"
+        assert url == "https://rpc-ger.aqara.com/app/v1.0/lumi/app/view/data/query/new"
+
+        body_dict = json.loads(session.request.call_args.kwargs["data"])
+        assert body_dict == {
+            "dataInfoBeans": [{
+                "processMethod": "presentValueMethod",
+                "readKeys": ["0.17.85", "8.0.2293"],
+            }],
+            "subjectId": "lumi.54ef",
+        }
+
+    async def test_process_method_is_passed_through(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_view_data_response([
+            {"dataKey": "1d_0_0.17.85", "value": "91.210935"},
+        ]))
+        client = AqaraCloudClient(region="EU", session=session)
+        result = await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["1d_0_0.17.85"],
+            process_method="statisticsMethod",
+        )
+
+        body_dict = json.loads(session.request.call_args.kwargs["data"])
+        assert body_dict["dataInfoBeans"][0]["processMethod"] == "statisticsMethod"
+        assert result == {"1d_0_0.17.85": "91.210935"}
+
+    async def test_sign_source_is_json_body_verbatim(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_view_data_response([]))
+        client = AqaraCloudClient(region="EU", session=session)
+        await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["0.17.85"],
+        )
+
+        body = session.request.call_args.kwargs["data"]
+        headers = session.request.call_args.kwargs["headers"]
+        expected = hashlib.md5(
+            f"Appid={AREAS['EU'].appid}&Nonce={headers['Nonce']}"
+            f"&Time={headers['Time']}&Token=tok-1"
+            f"&{body}&{AREAS['EU'].appkey}".encode()
+        ).hexdigest()
+        assert headers["Sign"] == expected
+        assert headers["Token"] == "tok-1"
+
+    async def test_skips_items_lacking_data_key_or_value(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_view_data_response([
+            {"dataKey": "0.17.85", "value": "1.5"},
+            {"dataKey": "8.0.2293"},          # no value
+            {"value": "9"},                   # no dataKey
+            "not-a-dict",
+        ]))
+        client = AqaraCloudClient(region="EU", session=session)
+        result = await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["0.17.85", "8.0.2293"],
+        )
+        assert result == {"0.17.85": "1.5"}
+
+    @pytest.mark.parametrize("result", [{}, {"data": []}, {"data": None}, [], None])
+    async def test_missing_or_empty_data_returns_empty_dict(self, result):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_fake_response(json.dumps({
+            "result": result, "code": 0,
+        })))
+        client = AqaraCloudClient(region="EU", session=session)
+        assert await client.query_view_data(
+            token="tok-1", did="lumi.54ef", read_keys=["0.17.85"],
+        ) == {}
+
+    async def test_server_error_raises(self):
+        session = MagicMock()
+        session.request = MagicMock(return_value=_fake_response(json.dumps({
+            "code": 106, "message": "Invalid sign",
+        })))
+        client = AqaraCloudClient(region="EU", session=session)
+        with pytest.raises(AqaraAuthError, match="Invalid sign"):
+            await client.query_view_data(
+                token="tok-1", did="lumi.54ef", read_keys=["0.17.85"],
+            )
+
+    async def test_http_error_raises(self):
+        session = MagicMock()
+
+        def _raise(*_a, **_kw):
+            raise aiohttp.ClientError("connection refused")
+
+        session.request = MagicMock(side_effect=_raise)
+        client = AqaraCloudClient(region="EU", session=session)
+        with pytest.raises(AqaraAuthError, match="HTTP error"):
+            await client.query_view_data(
+                token="tok-1", did="lumi.54ef", read_keys=["0.17.85"],
+            )
+
+
+# =============================================================================
 # Auth-failure code classification: _raise_if_error must raise the narrow
 # AqaraCloudAuthError subclass for codes Aqara's docs flag as token-invalid,
 # so callers can trigger HA's re-auth flow specifically.

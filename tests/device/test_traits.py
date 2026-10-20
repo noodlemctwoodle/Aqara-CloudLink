@@ -277,3 +277,19 @@ def test_trait_spec_hashable_in_set_membership():
     spec = TraitSpec(id="0.0.0", name="x", enum_values={"0": "Off"})
     s = {spec}
     assert spec in s
+
+
+def test_trait_spec_cloud_poll_defaults_to_false():
+    """Catalogue traits are LANLink-sourced unless explicitly marked."""
+    spec = TraitSpec(id="1.140.32945", name="Current power")
+    assert spec.cloud_poll is False
+
+
+def test_trait_spec_cloud_poll_round_trips():
+    """A cloud-polled trait keeps its rid as id and wire_path."""
+    spec = TraitSpec(
+        id="0.17.85", name="Socket 1 energy", wire_path="0.17.85",
+        platform="sensor", cloud_poll=True,
+    )
+    assert spec.cloud_poll is True
+    assert spec.id == spec.wire_path == "0.17.85"

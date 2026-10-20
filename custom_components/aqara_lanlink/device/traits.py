@@ -110,6 +110,11 @@ class TraitSpec:
     trait_code: str | None = None      # e.g. "Reachable", "CurrentTemperature", "Occupancy"
     subscribable: bool = False         # V3 distinguishes this from readable
     endpoint_id: int | None = None     # first component of wire_path; useful for filtering by endpoint
+    # True for a value the hub never serves over LANLink, read periodically from
+    # the Aqara cloud by legacy resource id instead (e.g. per-outlet metering).
+    # `wire_path` then holds that rid (e.g. "0.17.85") and the trait is kept out
+    # of the cloud trait subscribe+seed. See __init__._poll_cloud_traits.
+    cloud_poll: bool = False
 
     def __post_init__(self) -> None:
         """v3d-7 validation. Raises RuntimeError on construction-time misconfig."""

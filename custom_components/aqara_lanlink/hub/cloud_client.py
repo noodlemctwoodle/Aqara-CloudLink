@@ -184,6 +184,7 @@ _LOGIN_PATH = "/app/v1.0/lumi/user/login"
 _DEVICE_LIST_PATH = "/app/v1.0/lumi/app/position/device/query"
 _TRAIT_READ_PATH = "/app/v1.0/lumi/app/qlink/trait/read"
 _RES_QUERY_BY_RID_PATH = "/app/v1.0/lumi/res/query/by/resourceId"
+_VIEW_DATA_QUERY_PATH = "/app/v1.0/lumi/app/view/data/query/new"
 _DEV_QUERY_DETAIL_PATH = "/app/v1.0/lumi/app/dev/query/detail"
 _CUSTOM_ACTION_QUERY_PATH = "/app/v1.0/lumi/app/customaction/query"
 _SEQUENCE_RUN_PATH = "/app/v1.0/lumi/app/sequence/run"
@@ -671,6 +672,69 @@ class AqaraCloudClient:
                 if rid is None or value is None:
                     continue
                 values[rid] = value
+        return values
+
+    async def query_view_data(
+        self,
+        token: str,
+        did: str,
+        read_keys: Iterable[str],
+        process_method: str = "presentValueMethod",
+    ) -> dict[str, str]:
+        """Return current values keyed by data key for one device.
+
+        Calls ``POST /app/v1.0/lumi/app/view/data/query/new`` -- the call the
+        Aqara Home app's device pages make -- with body
+        ``{"dataInfoBeans": [{"processMethod": <method>, "readKeys": [<keys>]}],
+        "subjectId": <did>}``. With ``presentValueMethod`` the keys are legacy
+        resource ids (e.g. "0.17.85"), which reaches values the hub never
+        exposes over LANLink, such as per-outlet metering.
+
+        Args:
+            token: Authentication token from login.
+            did: Device ID (subjectId).
+            read_keys: Resource ids to read.
+            process_method: ``presentValueMethod`` for current values;
+                ``statisticsMethod`` takes keys like ``"1d_0_0.17.85"``.
+
+        Parses ``result.data`` into ``{dataKey: value}``. Items lacking either
+        key are skipped; a partial or empty result simply yields fewer (or no)
+        entries.
+
+        Raises :class:`AqaraAuthError` on auth, HTTP, or server-error
+        responses.
+        """
+        body_dict = {
+            "dataInfoBeans": [
+                {"processMethod": process_method, "readKeys": list(read_keys)},
+            ],
+            "subjectId": did,
+        }
+        # Use default json.dumps spacing - matches the byte sequence the
+        # server expects when computing the sign.
+        body_str = json.dumps(body_dict)
+        url = f"{self._area.server}{_VIEW_DATA_QUERY_PATH}"
+
+        _LOGGER.debug(
+            "query_view_data: POST %s body=%s",
+            _VIEW_DATA_QUERY_PATH, body_str,
+        )
+        payload = await self._signed_request(
+            "POST", url, sign_source=body_str, token=token, body=body_str,
+        )
+        self._raise_if_error(payload)
+        result = payload.get("result")
+        data = result.get("data") if isinstance(result, dict) else None
+        values: dict[str, str] = {}
+        if isinstance(data, list):
+            for item in data:
+                if not isinstance(item, dict):
+                    continue
+                key = item.get("dataKey")
+                value = item.get("value")
+                if key is None or value is None:
+                    continue
+                values[key] = value
         return values
 
     async def query_device_detail(

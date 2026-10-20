@@ -19,6 +19,7 @@ from time import monotonic
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
+from types import SimpleNamespace
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +33,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CLOUD_POLL_INTERVAL_SECONDS,
     CONF_AQARA_REGION,
     CONF_AQARA_TOKEN,
     CONF_AQARA_USER_ID,
@@ -425,6 +427,66 @@ async def _watchdog_tick(
         )
 
 
+def _cloud_poll_rids(merged_traits: Mapping[str, Any]) -> list[str]:
+    """Resource ids of a device's cloud-polled traits (TraitSpec.cloud_poll)."""
+    return sorted(
+        spec.wire_path
+        for spec in merged_traits.values()
+        if getattr(spec, "cloud_poll", False) and getattr(spec, "wire_path", None)
+    )
+
+
+async def _poll_cloud_traits(
+    *,
+    cloud: AqaraCloudClient | None,
+    token: str,
+    device: Device,
+    did: str,
+    rids: list[str],
+    seed: bool = False,
+) -> None:
+    """Read cloud-polled trait values by resource id and deliver them.
+
+    For values the hub never serves over LANLink (TraitSpec.cloud_poll -- e.g.
+    per-outlet metering on lumi.plug.aeu002) the Aqara cloud's
+    ``view/data/query/new`` is the only source. Plain rids ("0.17.85") are read
+    as current values; period totals use the app's statistics keys
+    ("1d_0_0.17.85" for today, "month_0_0.17.85" for this month) and are read
+    with ``statisticsMethod``. With ``seed=True`` (setup) the
+    values are staged via ``device.seed_initial_value`` so they land when the
+    entities register; otherwise they go through ``device.handle_report``
+    exactly like a LANLink push.
+
+    Read-only. An auth error propagates so the caller decides how to react;
+    any other failure is logged and swallowed so a cloud hiccup never breaks
+    setup or the poll loop.
+    """
+    if cloud is None or not token or not rids:
+        return
+    present = [rid for rid in rids if "_" not in rid]
+    statistics = [rid for rid in rids if "_" in rid]
+    values: dict[str, str] = {}
+    try:
+        if present:
+            values.update(await cloud.query_view_data(token, did, present))
+        if statistics:
+            values.update(await cloud.query_view_data(
+                token, did, statistics, process_method="statisticsMethod",
+            ))
+    except AqaraCloudAuthError:
+        raise
+    except Exception as exc:  # noqa: BLE001 -- log and continue
+        _LOGGER.warning(
+            "cloud poll: read failed for did=%s rids=%s (%s)", did, rids, exc,
+        )
+        return
+    if seed:
+        for rid, value in values.items():
+            device.seed_initial_value(rid, value)
+    elif values:
+        device.handle_report(SimpleNamespace(values=values))
+
+
 async def _build_device(
     hass: HomeAssistant,
     entry: AqaraLanLinkConfigEntry,
@@ -500,6 +562,16 @@ async def _build_device(
         _seed_settings_from_cloud(cloud=cloud, token=token, device=device),
         hass=hass, entry=entry, cloud_auth_failed=cloud_auth_failed,
         op_label=f"settings seed for did={did}",
+    )
+    # 3g: seed cloud-polled traits (TraitSpec.cloud_poll) so their entities load
+    # with state; the entry-level poll keeps them fresh afterwards.
+    cloud_auth_failed = await _run_cloud_call_with_reauth(
+        _poll_cloud_traits(
+            cloud=cloud, token=token, device=device, did=did,
+            rids=_cloud_poll_rids(merged_traits), seed=True,
+        ),
+        hass=hass, entry=entry, cloud_auth_failed=cloud_auth_failed,
+        op_label=f"cloud-poll seed for did={did}",
     )
     return device, merged_traits, cloud_auth_failed
 
@@ -723,6 +795,46 @@ async def async_setup_entry(
             )
         )
 
+        # Keep cloud-polled traits (TraitSpec.cloud_poll) fresh. The hub never
+        # pushes or serves them over LANLink, so read them from the Aqara cloud
+        # on an interval and deliver through the normal report path.
+        cloud_poll_targets = [
+            (device, did, rids)
+            for device, traits, did, _model in subscription_targets
+            if (rids := _cloud_poll_rids(traits))
+        ]
+        if cloud_poll_targets:
+            cloud_poll_failing = False
+
+            async def _cloud_poll_tick(_now: Any = None) -> None:
+                nonlocal cloud_poll_failing
+                data = entry.runtime_data
+                for device, did, rids in cloud_poll_targets:
+                    try:
+                        await _poll_cloud_traits(
+                            cloud=data.cloud_client, token=data.cloud_token,
+                            device=device, did=did, rids=rids,
+                        )
+                    except AqaraCloudAuthError as exc:
+                        # Log once per failure streak; the setup path owns
+                        # the re-auth flow.
+                        if not cloud_poll_failing:
+                            _LOGGER.warning(
+                                "cloud poll: auth rejected for did=%s (%s)",
+                                did, exc,
+                            )
+                        cloud_poll_failing = True
+                        return
+                cloud_poll_failing = False
+
+            entry.async_on_unload(
+                async_track_time_interval(
+                    hass, _cloud_poll_tick,
+                    timedelta(seconds=CLOUD_POLL_INTERVAL_SECONDS),
+                    cancel_on_shutdown=True,
+                )
+            )
+
         def _on_topology_changed(dids: frozenset[str]) -> None:
             nonlocal prev_topology
             # Sticky upgrade only: once we've seen children and classified the
@@ -936,6 +1048,9 @@ async def _subscribe_and_seed_traits(
         spec.wire_path
         for spec in merged_traits.values()
         if getattr(spec, "wire_path", None)
+        # Cloud-polled traits carry a legacy rid, not a trait path; they are
+        # read by _poll_cloud_traits instead.
+        and not getattr(spec, "cloud_poll", False)
     })
     if not paths:
         return
