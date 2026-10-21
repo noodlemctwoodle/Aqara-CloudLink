@@ -31,6 +31,10 @@ class CloudDevice:
     did: str
     model: str
     name: str
+    #: The subentry this device was added under. Entities are registered
+    #: against it so Home Assistant groups them under that subentry in the
+    #: UI, rather than listing the device as belonging to no sub-entry.
+    subentry_id: str | None = None
 
     @property
     def metrics(self) -> tuple[CloudMetric, ...]:

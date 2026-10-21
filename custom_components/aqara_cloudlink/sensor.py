@@ -20,13 +20,25 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create one sensor per metric per device."""
+    """Create one sensor per metric per device.
+
+    Entities are added per subentry so Home Assistant files them under the
+    subentry that added the device. Without `config_subentry_id` the device
+    is listed as belonging to no sub-entry and the subentry row shows empty,
+    which reads as a failed add.
+    """
     coordinator: AqaraCloudCoordinator = entry.runtime_data
-    async_add_entities(
-        AqaraCloudSensor(coordinator, device, metric)
-        for device in coordinator.devices
-        for metric in device.metrics
-    )
+    for device in coordinator.devices:
+        entities = [
+            AqaraCloudSensor(coordinator, device, metric)
+            for metric in device.metrics
+        ]
+        if not entities:
+            continue
+        if device.subentry_id is None:
+            async_add_entities(entities)
+        else:
+            async_add_entities(entities, config_subentry_id=device.subentry_id)
 
 
 def _device_info(hass: HomeAssistant, device: CloudDevice) -> DeviceInfo:

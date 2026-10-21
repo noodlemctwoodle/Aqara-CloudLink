@@ -76,6 +76,11 @@ def _subentry_devices(entry: AqaraCloudLinkConfigEntry) -> list[CloudDevice]:
         if not did or not model:
             continue
         devices.append(
-            CloudDevice(did=did, model=model, name=sub.data.get(CONF_NAME) or model)
+            CloudDevice(
+                did=did,
+                model=model,
+                name=sub.data.get(CONF_NAME) or model,
+                subentry_id=sub.subentry_id,
+            )
         )
     return devices

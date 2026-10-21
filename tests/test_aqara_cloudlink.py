@@ -558,3 +558,49 @@ async def test_setup_with_no_subentries_loads_empty(hass):
     assert entry.state is ConfigEntryState.LOADED
     assert not [s for s in hass.states.async_all("sensor")
                 if s.entity_id.startswith("sensor.kitchen")]
+
+
+async def test_entities_are_filed_under_their_subentry(hass):
+    """Entities must belong to the subentry that added the device.
+
+    Without this the device shows under "devices that don't belong to a
+    sub-entry" and the subentry row renders empty, which reads as a failed
+    add even though the sensors exist.
+    """
+    from unittest.mock import patch
+
+    from homeassistant.config_entries import ConfigSubentryData
+
+    from custom_components.aqara_cloudlink.const import (
+        CONF_REGION, CONF_TOKEN, CONF_USER_ID, SUBENTRY_TYPE_DEVICE,
+    )
+
+    class _Client:
+        def __init__(self, *a, **k): pass
+        async def query_view_data(self, token, did, read_keys, process_method):
+            return {k: "1.0" for k in read_keys}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USER_ID: "u3", CONF_TOKEN: "tok", CONF_REGION: "EU"},
+        unique_id="u3",
+        subentries_data=[
+            ConfigSubentryData(
+                data={"did": DID, "model": PLUG, "name": "Kitchen Power Socket"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="Kitchen Power Socket",
+                unique_id=DID,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    subentry_id = next(iter(entry.subentries))
+
+    with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    reg = er.async_get(hass)
+    ours = [e for e in reg.entities.values() if e.platform == DOMAIN]
+    assert len(ours) == 8
+    assert {e.config_subentry_id for e in ours} == {subentry_id}
