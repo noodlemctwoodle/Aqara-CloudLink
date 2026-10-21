@@ -7,13 +7,19 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .cloud import AqaraAuthError, AqaraCloudAuthError, AqaraCloudClient
-from .const import CONF_REGION, CONF_TOKEN, DEFAULT_REGION
+from .cloud import AqaraCloudClient
+from .const import (
+    CONF_DID,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_TOKEN,
+    DEFAULT_REGION,
+    SUBENTRY_TYPE_DEVICE,
+)
 from .coordinator import AqaraCloudCoordinator, CloudDevice
 from .linker import async_track_lanlink_devices
-from .metrics import metrics_for
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,26 +29,15 @@ type AqaraCloudLinkConfigEntry = ConfigEntry[AqaraCloudCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntry) -> bool:
-    """Enumerate the account's devices and start polling the supported ones."""
+    """Start polling the devices added as subentries."""
     client = AqaraCloudClient(entry.data.get(CONF_REGION, DEFAULT_REGION), hass=hass)
     token: str = entry.data[CONF_TOKEN]
 
-    try:
-        records = await client.query_device_list(token)
-    except AqaraCloudAuthError as err:
-        raise ConfigEntryAuthFailed("Aqara cloud rejected the stored token") from err
-    except AqaraAuthError as err:
-        raise ConfigEntryNotReady(f"Could not reach the Aqara cloud: {err}") from err
-
-    devices = _supported_devices(records)
+    devices = _subentry_devices(entry)
     if not devices:
-        # Not an error: the account simply holds nothing this integration can
-        # add sensors for. Setting up with no entities beats failing, so the
-        # entry stays and picks up devices added later on the next reload.
-        _LOGGER.info(
-            "No devices in this Aqara account have cloud-only values to read; "
-            "set up with no entities"
-        )
+        # Nothing picked yet. Setting up with no entities beats failing: the
+        # user adds devices from the integration page and the entry reloads.
+        _LOGGER.info("No devices added yet; add one from the integration page")
 
     coordinator = AqaraCloudCoordinator(hass, entry, client, token, devices)
     await coordinator.async_config_entry_first_refresh()
@@ -57,7 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntr
     entry.async_on_unload(
         async_track_lanlink_devices(hass, [device.did for device in devices])
     )
+    entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
+
+
+async def _async_reload(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntry) -> None:
+    """Reload when a device subentry is added or removed."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntry) -> bool:
@@ -65,23 +66,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEnt
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def _supported_devices(records: list[dict]) -> list[CloudDevice]:
-    """Keep only the account's devices that have cloud-only values.
-
-    The cloud returns every device across every home. Anything whose model
-    has no entry in `metrics` is skipped, so adding a model to that table is
-    all it takes to start reading it.
-    """
+def _subentry_devices(entry: AqaraCloudLinkConfigEntry) -> list[CloudDevice]:
+    """Build the device list from the entry's device subentries."""
     devices: list[CloudDevice] = []
-    for record in records:
-        did, model = record.get("did"), record.get("model")
-        if not did or not model or not metrics_for(model):
+    for sub in entry.subentries.values():
+        if sub.subentry_type != SUBENTRY_TYPE_DEVICE:
+            continue
+        did, model = sub.data.get(CONF_DID), sub.data.get(CONF_MODEL)
+        if not did or not model:
             continue
         devices.append(
-            CloudDevice(
-                did=did,
-                model=model,
-                name=record.get("deviceName") or model,
-            )
+            CloudDevice(did=did, model=model, name=sub.data.get(CONF_NAME) or model)
         )
     return devices

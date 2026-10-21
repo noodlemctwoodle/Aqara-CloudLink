@@ -8,7 +8,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.aqara_cloudlink import _supported_devices
+from custom_components.aqara_cloudlink.config_flow import eligible_devices
 from custom_components.aqara_cloudlink.cloud import AqaraCloudAuthError
 from custom_components.aqara_cloudlink.const import DOMAIN, LANLINK_DOMAIN
 from custom_components.aqara_cloudlink.coordinator import (
@@ -88,23 +88,6 @@ def test_unknown_model_has_no_metrics():
 # --------------------------------------------------------------------------
 # device filtering
 # --------------------------------------------------------------------------
-
-
-def test_only_models_with_metrics_are_kept():
-    devices = _supported_devices(
-        [
-            {"did": DID, "model": PLUG, "deviceName": "Socket", "parentDeviceId": HUB},
-            {"did": "lumi.x", "model": "lumi.sensor_magnet.aq2", "deviceName": "Window"},
-            {"did": "lumi.y"},                      # no model
-            {"model": PLUG, "deviceName": "No did"},  # no did
-        ]
-    )
-    assert [d.did for d in devices] == [DID]
-
-
-def test_name_falls_back_to_model():
-    devices = _supported_devices([{"did": DID, "model": PLUG}])
-    assert devices[0].name == PLUG
 
 
 # --------------------------------------------------------------------------
@@ -216,69 +199,6 @@ async def test_registers_own_device_without_lanlink(hass):
     # via_device would always dangle. HA stops allowing that in 2025.12.
     assert "via_device" not in info
 
-
-# --------------------------------------------------------------------------
-# end to end: a real config entry setup
-# --------------------------------------------------------------------------
-
-
-async def test_entry_sets_up_and_creates_sensors(hass):
-    """Set the entry up with a stubbed cloud and assert the sensors appear."""
-    from unittest.mock import patch
-
-    from homeassistant.config_entries import ConfigEntryState
-
-    from custom_components.aqara_cloudlink.const import CONF_REGION, CONF_TOKEN, CONF_USER_ID
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        async def query_device_list(self, token):
-            return [
-                {"did": DID, "model": PLUG, "deviceName": "Kitchen Power Socket",
-                 "parentDeviceId": HUB},
-                {"did": "lumi.z", "model": "lumi.sensor_magnet.aq2",
-                 "deviceName": "Window"},
-            ]
-
-        async def query_view_data(self, token, did, read_keys, process_method):
-            if process_method == "presentValueMethod":
-                return {"8.0.2293": "1612.5", "0.17.85": "113704.5",
-                        "8.0.2304": "0.0", "0.18.85": "9976.8"}
-            return {"1d_0_0.17.85": "42.0", "month_0_0.17.85": "1386.7",
-                    "1d_0_0.18.85": "0.0", "month_0_0.18.85": "25.6"}
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USER_ID: "u1", CONF_TOKEN: "tok", CONF_REGION: "EU"},
-        unique_id="u1",
-    )
-    entry.add_to_hass(hass)
-
-    with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-    states = {
-        s.entity_id: s.state
-        for s in hass.states.async_all("sensor")
-        if s.entity_id.startswith("sensor.kitchen_power_socket")
-    }
-    print("\n  entities created:")
-    for eid, value in sorted(states.items()):
-        print(f"    {eid} = {value}")
-
-    # Eight sensors for the plug; the magnet sensor has no metrics so is skipped.
-    assert len(states) == 8
-    assert "1612.5" in states.values()
-
-    # And it unloads cleanly.
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 # --------------------------------------------------------------------------
@@ -508,3 +428,133 @@ async def test_relink_repairs_an_already_split_install(hass):
     assert async_relink_devices(hass, [DID]) == 1
     assert er.async_get(hass).async_get(ent.entity_id).device_id == real.id
     assert dr.async_get(hass).async_get(stray.id) is None
+
+
+# --------------------------------------------------------------------------
+# device picker
+# --------------------------------------------------------------------------
+
+_RECORDS = [
+    {"did": DID, "model": PLUG, "deviceName": "Kitchen Power Socket"},
+    {"did": "lumi.zzz", "model": "lumi.sensor_magnet.aq2", "deviceName": "Window"},
+    {"did": "lumi.aaa", "model": PLUG, "deviceName": "Another Socket"},
+    {"did": "lumi.nomodel", "deviceName": "Broken"},
+]
+
+
+def test_picker_offers_only_models_with_metrics():
+    """A device we have no cloud metrics for must not be offerable."""
+    got = eligible_devices(_RECORDS, already=set())
+    assert [d[0] for d in got] == ["lumi.aaa", DID]  # sorted by name
+    assert all(d[1] == PLUG for d in got)
+
+
+def test_picker_hides_devices_already_added():
+    got = eligible_devices(_RECORDS, already={DID})
+    assert [d[0] for d in got] == ["lumi.aaa"]
+
+
+def test_picker_falls_back_to_model_for_a_nameless_device():
+    got = eligible_devices([{"did": DID, "model": PLUG}], already=set())
+    assert got[0][2] == PLUG
+
+
+def test_added_dids_reads_device_subentries(hass):
+    """Only device subentries count, and only those carrying a DID."""
+    from homeassistant.config_entries import ConfigSubentryData
+
+    from custom_components.aqara_cloudlink.config_flow import added_dids
+    from custom_components.aqara_cloudlink.const import SUBENTRY_TYPE_DEVICE
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        subentries_data=[
+            ConfigSubentryData(
+                data={"did": DID, "model": PLUG, "name": "Socket"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="Socket",
+                unique_id=DID,
+            ),
+            ConfigSubentryData(
+                data={"something": "else"},
+                subentry_type="not_a_device",
+                title="Other",
+                unique_id="x",
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert added_dids(entry) == {DID}
+
+
+async def test_setup_builds_devices_from_subentries(hass):
+    """Entities come from what was picked, not from everything on the account."""
+    from unittest.mock import patch
+
+    from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+
+    from custom_components.aqara_cloudlink.const import (
+        CONF_REGION, CONF_TOKEN, CONF_USER_ID, SUBENTRY_TYPE_DEVICE,
+    )
+
+    class _Client:
+        def __init__(self, *a, **k): pass
+        async def query_view_data(self, token, did, read_keys, process_method):
+            if process_method == "presentValueMethod":
+                return {"8.0.2293": "12.5", "0.17.85": "1.0",
+                        "8.0.2304": "0.0", "0.18.85": "2.0"}
+            return {"1d_0_0.17.85": "3.0", "month_0_0.17.85": "4.0",
+                    "1d_0_0.18.85": "0.0", "month_0_0.18.85": "5.0"}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USER_ID: "u1", CONF_TOKEN: "tok", CONF_REGION: "EU"},
+        unique_id="u1",
+        subentries_data=[
+            ConfigSubentryData(
+                data={"did": DID, "model": PLUG, "name": "Kitchen Power Socket"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="Kitchen Power Socket",
+                unique_id=DID,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    states = [s for s in hass.states.async_all("sensor")
+              if s.entity_id.startswith("sensor.kitchen_power_socket")]
+    assert len(states) == 8
+
+
+async def test_setup_with_no_subentries_loads_empty(hass):
+    """Before anything is picked the entry must still load, with no entities."""
+    from unittest.mock import patch
+
+    from homeassistant.config_entries import ConfigEntryState
+
+    from custom_components.aqara_cloudlink.const import (
+        CONF_REGION, CONF_TOKEN, CONF_USER_ID,
+    )
+
+    class _Client:
+        def __init__(self, *a, **k): pass
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USER_ID: "u2", CONF_TOKEN: "tok", CONF_REGION: "EU"},
+        unique_id="u2",
+    )
+    entry.add_to_hass(hass)
+    with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not [s for s in hass.states.async_all("sensor")
+                if s.entity_id.startswith("sensor.kitchen")]

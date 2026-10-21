@@ -33,5 +33,26 @@
       "already_configured": "This Aqara account is already set up.",
       "reauth_successful": "Re-authentication succeeded."
     }
+  },
+  "config_subentries": {
+    "device": {
+      "title": "Add a device",
+      "step": {
+        "user": {
+          "title": "Add a device",
+          "description": "Devices on your Aqara account that this integration can read cloud-only values for. One per run; rerun to add more.",
+          "data": {
+            "did": "Device"
+          }
+        }
+      },
+      "abort": {
+        "no_devices": "No devices left to add. Either they are all added already, or this account has none whose cloud-only values are known to this integration.",
+        "cannot_connect": "Could not reach the Aqara cloud.",
+        "invalid_auth": "The stored token was rejected. Reconfigure the integration.",
+        "unknown": "Unexpected error. Check the logs."
+      },
+      "entry_type": "Device"
+    }
   }
 }

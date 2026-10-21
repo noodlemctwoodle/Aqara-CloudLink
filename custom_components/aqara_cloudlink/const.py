@@ -24,3 +24,10 @@ DEFAULT_SCAN_INTERVAL_SECONDS: Final = 60.0
 # statisticsMethod; plain resource ids go to presentValueMethod.
 PRESENT_VALUE_METHOD: Final = "presentValueMethod"
 STATISTICS_METHOD: Final = "statisticsMethod"
+
+# Devices are added one at a time as subentries, the way Aqara-LANLink does
+# it, rather than every matching device on the account being adopted at setup.
+SUBENTRY_TYPE_DEVICE: Final = "device"
+CONF_DID: Final = "did"
+CONF_MODEL: Final = "model"
+CONF_NAME: Final = "name"

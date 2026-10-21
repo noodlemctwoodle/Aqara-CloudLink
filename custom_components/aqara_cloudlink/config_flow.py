@@ -7,10 +7,17 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -23,7 +30,18 @@ from .cloud import (
     AqaraCloudClient,
     AqaraTokens,
 )
-from .const import CONF_REGION, CONF_TOKEN, CONF_USER_ID, DEFAULT_REGION, DOMAIN
+from .const import (
+    CONF_DID,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_REGION,
+    CONF_TOKEN,
+    CONF_USER_ID,
+    DEFAULT_REGION,
+    DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
+)
+from .metrics import metrics_for
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,10 +119,44 @@ def _classify(err: Exception) -> str:
     return "unknown"
 
 
+def added_dids(entry: ConfigEntry) -> set[str]:
+    """DIDs already added to this entry as device subentries."""
+    return {
+        sub.data[CONF_DID]
+        for sub in entry.subentries.values()
+        if sub.subentry_type == SUBENTRY_TYPE_DEVICE and CONF_DID in sub.data
+    }
+
+
+def eligible_devices(
+    records: list[dict], already: set[str]
+) -> list[tuple[str, str, str]]:
+    """Return (did, model, name) for devices that can still be added.
+
+    A device is eligible when `metrics` knows cloud-only values for its model
+    and it is not already a subentry. Sorted by name so the picker is stable.
+    """
+    out: list[tuple[str, str, str]] = []
+    for record in records:
+        did, model = record.get("did"), record.get("model")
+        if not did or not model or did in already or not metrics_for(model):
+            continue
+        out.append((did, model, record.get("deviceName") or model))
+    return sorted(out, key=lambda item: item[2].lower())
+
+
 class AqaraCloudLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Collect credentials and store only the resulting token."""
 
     VERSION = 1
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Devices are added one at a time, as subentries."""
+        return {SUBENTRY_TYPE_DEVICE: DeviceSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -173,3 +225,58 @@ class AqaraCloudLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"region": region},
         )
+
+
+class DeviceSubentryFlowHandler(ConfigSubentryFlow):
+    """Pick one device to read cloud-only values for.
+
+    One device per run, matching how Aqara-LANLink adds devices, so the list
+    is always current and an unreachable cloud fails one add rather than all
+    of them.
+    """
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Show the devices this integration can read, and add the chosen one."""
+        entry = self._get_entry()
+        client = AqaraCloudClient(
+            region=entry.data.get(CONF_REGION, DEFAULT_REGION), hass=self.hass
+        )
+
+        try:
+            records = await client.query_device_list(entry.data[CONF_TOKEN])
+        except Exception as err:  # noqa: BLE001 - classified and logged
+            return self.async_abort(reason=_classify(err))
+
+        choices = eligible_devices(records, added_dids(entry))
+        if not choices:
+            # Either everything eligible is already added, or this account has
+            # nothing `metrics` knows about. Both are dead ends for this form.
+            return self.async_abort(reason="no_devices")
+
+        by_did = {did: (model, name) for did, model, name in choices}
+
+        if user_input is not None:
+            did = user_input[CONF_DID]
+            model, name = by_did[did]
+            return self.async_create_entry(
+                title=name,
+                data={CONF_DID: did, CONF_MODEL: model, CONF_NAME: name},
+                unique_id=did,
+            )
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_DID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=did, label=f"{name} ({model})")
+                            for did, model, name in choices
+                        ],
+                        mode=SelectSelectorMode.LIST,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="user", data_schema=schema)
