@@ -62,6 +62,8 @@ def test_metrics_cover_both_sockets():
     assert keys == {
         "8.0.2293", "0.17.85", "1d_0_0.17.85", "month_0_0.17.85",
         "8.0.2304", "0.18.85", "1d_0_0.18.85", "month_0_0.18.85",
+        # Device totals for the period; LANLink serves only the running total.
+        "1d_0_0.13.85", "month_0_0.13.85",
     }
 
 
@@ -529,7 +531,7 @@ async def test_setup_builds_devices_from_subentries(hass):
     assert entry.state is ConfigEntryState.LOADED
     states = [s for s in hass.states.async_all("sensor")
               if s.entity_id.startswith("sensor.kitchen_power_socket")]
-    assert len(states) == 8
+    assert len(states) == 10
 
 
 async def test_setup_with_no_subentries_loads_empty(hass):
@@ -599,7 +601,7 @@ async def test_entities_are_not_claimed_for_the_subentry(hass):
         await hass.async_block_till_done()
 
     ours = [e for e in er.async_get(hass).entities.values() if e.platform == DOMAIN]
-    assert len(ours) == 8, "the sensors must exist"
+    assert len(ours) == 10, "the sensors must exist"
     assert {e.config_subentry_id for e in ours} == {None}
 
 

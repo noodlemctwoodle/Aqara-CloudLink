@@ -86,6 +86,22 @@ METRICS: dict[str, tuple[CloudMetric, ...]] = {
     "lumi.plug.aeu002": (
         *_socket(1, energy_rid="0.17.85", power_rid="8.0.2293"),
         *_socket(2, energy_rid="0.18.85", power_rid="8.0.2304"),
+        # Device totals for the period. LANLink serves the running total
+        # (0.13.85) but not these, and the app shows them on the device page.
+        CloudMetric(
+            key="1d_0_0.13.85",
+            name="Energy today",
+            device_class=SensorDeviceClass.ENERGY,
+            unit=UnitOfEnergy.WATT_HOUR,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        CloudMetric(
+            key="month_0_0.13.85",
+            name="Energy this month",
+            device_class=SensorDeviceClass.ENERGY,
+            unit=UnitOfEnergy.WATT_HOUR,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
     ),
 }
 
