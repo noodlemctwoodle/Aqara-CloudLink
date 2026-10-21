@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.cloud_client import (
+from custom_components.aqaralink.hub.cloud_client import (
     AREAS,
     AqaraAuthError,
     AqaraCloudClient,

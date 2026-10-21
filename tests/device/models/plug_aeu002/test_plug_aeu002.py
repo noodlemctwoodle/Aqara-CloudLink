@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog
-from custom_components.aqara_lanlink.device.build_descriptors import build_descriptors
-from custom_components.aqara_lanlink.device.descriptors import SensorDescriptor
-from custom_components.aqara_lanlink.device.overlay import Overlay
+from custom_components.aqaralink.device import catalog
+from custom_components.aqaralink.device.build_descriptors import build_descriptors
+from custom_components.aqaralink.device.descriptors import SensorDescriptor
+from custom_components.aqaralink.device.overlay import Overlay
 
 MODEL = "lumi.plug.aeu002"
 

@@ -6,8 +6,8 @@ from typing import NamedTuple
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog
-from custom_components.aqara_lanlink.device.catalog import (
+from custom_components.aqaralink.device import catalog
+from custom_components.aqaralink.device.catalog import (
     DisplayMetadata,
     get_display_metadata,
     get_enum_labels,
@@ -72,12 +72,12 @@ def test_display_metadata_is_named_tuple_subclass():
 
 class TestAllowUnauthored:
     def test_returns_empty_tuple_when_model_lacks_field(self):
-        from custom_components.aqara_lanlink.device import catalog
+        from custom_components.aqaralink.device import catalog
         result = catalog.allow_unauthored("lumi.sensor.motion.aq2")
         assert result == ()
 
     def test_returns_tuple_when_model_declares_field(self, monkeypatch):
-        from custom_components.aqara_lanlink.device import catalog, registry
+        from custom_components.aqaralink.device import catalog, registry
         from types import ModuleType
         monkeypatch.setattr(registry, "_discovered", True)
         fake = ModuleType("fake_pkg")
@@ -95,7 +95,7 @@ class TestAllowUnauthored:
             registry._ALLOW_UNAUTHORED_INDEX.pop("lumi.fake.allow_unauth", None)
 
     def test_returns_empty_tuple_for_unknown_model(self):
-        from custom_components.aqara_lanlink.device import catalog
+        from custom_components.aqaralink.device import catalog
         catalog.reset_for_tests()
         assert catalog.allow_unauthored("lumi.unknown.model.zzz") == ()
 
@@ -103,7 +103,7 @@ class TestAllowUnauthored:
 def test_get_enum_labels_reads_traitspec_enum_values(monkeypatch):
     """get_enum_labels returns the TraitSpec.enum_values dict, or None."""
     import types
-    from custom_components.aqara_lanlink.device import catalog, registry, traits
+    from custom_components.aqaralink.device import catalog, registry, traits
 
     registry.reset_for_tests()
     fake = types.ModuleType("fake_pkg_c")

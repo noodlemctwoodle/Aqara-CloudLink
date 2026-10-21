@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from custom_components.aqara_lanlink.device.humanize import humanize_name
+from custom_components.aqaralink.device.humanize import humanize_name
 
 _MODELS_ROOT = (
     Path(__file__).resolve().parents[2]
-    / "custom_components" / "aqara_lanlink" / "device" / "models"
+    / "custom_components" / "aqaralink" / "device" / "models"
 )
 
 

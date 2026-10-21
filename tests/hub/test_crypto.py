@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.crypto import (
+from custom_components.aqaralink.hub.crypto import (
     FRAME_HEADER_LEN,
     FRAME_MAGIC,
     FRAME_TRAILER_LEN,

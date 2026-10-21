@@ -9,15 +9,15 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device.composites import CODECS
-from custom_components.aqara_lanlink.device.composites.controller import (
+from custom_components.aqaralink.device.composites import CODECS
+from custom_components.aqaralink.device.composites.controller import (
     CompositeController,
 )
-from custom_components.aqara_lanlink.device.composites.entities import (
+from custom_components.aqaralink.device.composites.entities import (
     CompositeSwitch,
     CompositeTime,
 )
-from custom_components.aqara_lanlink.device.composites.setup import (
+from custom_components.aqaralink.device.composites.setup import (
     composite_entities_for_platform,
 )
 

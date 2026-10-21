@@ -9,21 +9,21 @@ import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 
-from custom_components.aqara_lanlink.binary_sensor import (
+from custom_components.aqaralink.binary_sensor import (
     AqaraBinarySensor,
     async_setup_entry,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 from .conftest import make_device, make_hub, make_subentry
 
 
 def test_forwarding_health_is_on_reflects_hub_liveness():
-    from custom_components.aqara_lanlink import PUSH_STALL_TTL_SECONDS
-    from custom_components.aqara_lanlink.binary_sensor import (
+    from custom_components.aqaralink import PUSH_STALL_TTL_SECONDS
+    from custom_components.aqaralink.binary_sensor import (
         AqaraHubForwardingHealth,
     )
 
@@ -48,7 +48,7 @@ def test_forwarding_health_is_on_reflects_hub_liveness():
 
 
 async def test_async_setup_entry_adds_forwarding_health():
-    from custom_components.aqara_lanlink.binary_sensor import (
+    from custom_components.aqaralink.binary_sensor import (
         AqaraHubForwardingHealth,
     )
 
@@ -113,8 +113,8 @@ def test_package_detector_appeared_turns_on_disappeared_turns_off():
     2=PackageDisappeared. As a stateful binary sensor the explicit
     'disappeared' signal must turn the sensor OFF -- not register as 'on'
     (the bug when it used the momentary on_any_value archetype)."""
-    from custom_components.aqara_lanlink.device.device_types import _detectors
-    from custom_components.aqara_lanlink.device.device_types._base import ComposeContext
+    from custom_components.aqaralink.device.device_types import _detectors
+    from custom_components.aqaralink.device.device_types._base import ComposeContext
 
     spec = TraitSpec(
         id="8.223.20221", wire_path="8.223.20221", name="Package recognition report",
@@ -302,8 +302,8 @@ async def test_async_setup_entry_creates_one_entity_per_descriptor():
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_skips_non_binary_sensor_descriptors():
-    from custom_components.aqara_lanlink.device.attrs import AttrSpec
-    from custom_components.aqara_lanlink.device.descriptors import SwitchDescriptor
+    from custom_components.aqaralink.device.attrs import AttrSpec
+    from custom_components.aqaralink.device.descriptors import SwitchDescriptor
 
     bs = _motion_descriptor(auto_clear=None)
     sw = SwitchDescriptor(key="other", attr=AttrSpec(name="other_attr"))
@@ -391,7 +391,7 @@ async def _drive_added_to_hass(entity, last_state):
     entity.async_get_last_state = fake_get_last_state
     # Stub the parent chain (AqaraEntity -> RestoreEntity -> Entity)
     # since their behaviour is exercised in their own test suites.
-    from custom_components.aqara_lanlink import binary_sensor as bs_mod
+    from custom_components.aqaralink import binary_sensor as bs_mod
     original_super = bs_mod.AqaraEntity.async_added_to_hass
 
     async def stubbed_super(self):

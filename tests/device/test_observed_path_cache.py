@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.observed_path_cache import (
+from custom_components.aqaralink.device.observed_path_cache import (
     ObservedPathCache,
 )
 
@@ -43,7 +43,7 @@ def fake_hass():
 def test_async_load_returns_empty_when_storage_missing(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -55,14 +55,14 @@ def test_async_load_returns_empty_when_storage_missing(fake_hass, monkeypatch):
 def test_async_load_restores_v2_persisted_state(fake_hass, monkeypatch):
     """v2 storage is keyed {model: {did: [paths]}}; restore preserves both."""
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = {
+    storage["aqaralink.observed_paths"] = {
         _MODEL: {
             _DID_A: ["2.164.20536", "2.164.20537"],
             _DID_B: ["2.164.20538"],
         },
     }
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -81,11 +81,11 @@ def test_async_load_discards_legacy_v1_entries(fake_hass, monkeypatch):
     gets recorded anyway. Genuinely-novel paths re-appear on next push.
     """
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = {
+    storage["aqaralink.observed_paths"] = {
         _MODEL: ["2.164.20536", "2.164.20537"],  # v1 shape
     }
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -97,9 +97,9 @@ def test_async_load_discards_legacy_v1_entries(fake_hass, monkeypatch):
 def test_async_load_tolerates_garbage_storage(fake_hass, monkeypatch):
     """Storage with completely-wrong types starts empty without crashing."""
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = "not a dict"
+    storage["aqaralink.observed_paths"] = "not a dict"
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -110,14 +110,14 @@ def test_async_load_tolerates_garbage_storage(fake_hass, monkeypatch):
 def test_record_adds_path_and_schedules_save(fake_hass, monkeypatch):
     hass, storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
     asyncio.run(cache.async_load())
     cache.record(_DID_A, _MODEL, "2.164.20536")
     assert cache.get_paths(_MODEL) == frozenset({"2.164.20536"})
-    assert storage["aqara_lanlink.observed_paths"] == {
+    assert storage["aqaralink.observed_paths"] == {
         _MODEL: {_DID_A: ["2.164.20536"]},
     }
 
@@ -127,14 +127,14 @@ def test_record_partitions_by_did(fake_hass, monkeypatch):
     the notification can name the actual paired device, not just a model."""
     hass, storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
     asyncio.run(cache.async_load())
     cache.record(_DID_A, _MODEL, "2.164.20536")
     cache.record(_DID_B, _MODEL, "2.164.20537")
-    snapshot = storage["aqara_lanlink.observed_paths"]
+    snapshot = storage["aqaralink.observed_paths"]
     assert snapshot[_MODEL][_DID_A] == ["2.164.20536"]
     assert snapshot[_MODEL][_DID_B] == ["2.164.20537"]
 
@@ -142,7 +142,7 @@ def test_record_partitions_by_did(fake_hass, monkeypatch):
 def test_record_is_idempotent(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -155,7 +155,7 @@ def test_record_is_idempotent(fake_hass, monkeypatch):
 def test_record_rejects_empty_args(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -168,11 +168,11 @@ def test_record_rejects_empty_args(fake_hass, monkeypatch):
 
 def test_new_paths_count_tracks_post_load_records(fake_hass, monkeypatch):
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = {
+    storage["aqaralink.observed_paths"] = {
         _MODEL: {_DID_A: ["2.164.20536"]},
     }
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -192,7 +192,7 @@ def test_new_paths_by_device_partitions_by_did_and_model(fake_hass, monkeypatch)
     enumerate per-device."""
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -217,7 +217,7 @@ def test_new_paths_by_device_partitions_by_did_and_model(fake_hass, monkeypatch)
 def test_new_paths_by_device_omits_empty_buckets(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -230,7 +230,7 @@ def test_new_paths_by_device_omits_empty_buckets(fake_hass, monkeypatch):
 def test_callback_fires_on_every_new_path_not_duplicates(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     calls: list[int] = []
@@ -246,7 +246,7 @@ def test_callback_fires_on_every_new_path_not_duplicates(fake_hass, monkeypatch)
 def test_callback_swallows_exceptions(fake_hass, monkeypatch):
     hass, _storage, FakeStore = fake_hass
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
 
@@ -267,7 +267,7 @@ def test_prune_dropped_paths_clears_now_filtered_traits(fake_hass, monkeypatch):
     commit `680fa33`).
     """
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = {
+    storage["aqaralink.observed_paths"] = {
         _MODEL: {
             _DID_A: ["1.205.33107", "2.164.20536"],  # LQI dropped, vibration kept
             _DID_B: ["1.205.33107"],
@@ -277,7 +277,7 @@ def test_prune_dropped_paths_clears_now_filtered_traits(fake_hass, monkeypatch):
         },
     }
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)
@@ -300,11 +300,11 @@ def test_prune_dropped_paths_clears_now_filtered_traits(fake_hass, monkeypatch):
 
 def test_prune_dropped_paths_returns_zero_when_nothing_to_remove(fake_hass, monkeypatch):
     hass, storage, FakeStore = fake_hass
-    storage["aqara_lanlink.observed_paths"] = {
+    storage["aqaralink.observed_paths"] = {
         _MODEL: {_DID_A: ["2.164.20536"]},
     }
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     cache = ObservedPathCache(hass)

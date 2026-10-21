@@ -31,13 +31,13 @@ from pytest_homeassistant_custom_component.common import (
     start_reauth_flow,
 )
 
-from custom_components.aqara_lanlink import config_flow as config_flow_module
-from custom_components.aqara_lanlink.config_flow import (
+from custom_components.aqaralink import config_flow as config_flow_module
+from custom_components.aqaralink.config_flow import (
     AqaraDeviceSubentryFlow,
     AqaraLanLinkConfigFlow,
 )
-from custom_components.aqara_lanlink.device.camera.base import CameraDevice
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink.device.camera.base import CameraDevice
+from custom_components.aqaralink.const import (
     CONF_AQARA_ACCOUNT,
     CONF_AQARA_PASSWORD,
     CONF_AQARA_REGION,
@@ -51,23 +51,23 @@ from custom_components.aqara_lanlink.const import (
     CONF_HUB_PORT,
     DOMAIN,
 )
-from custom_components.aqara_lanlink.hub.cloud_client import (
+from custom_components.aqaralink.hub.cloud_client import (
     AqaraAuthError,
     AqaraTokens,
     EndpointPanel,
 )
-from custom_components.aqara_lanlink.hub.mdns import AqaraServiceRecord
-from custom_components.aqara_lanlink.hub.probe import ProbeResult
+from custom_components.aqaralink.hub.mdns import AqaraServiceRecord
+from custom_components.aqaralink.hub.probe import ProbeResult
 
 
 # Where the config flow imports `discover_hubs` and `probe_tunnel_host` from.
 # The flow imports these function symbols into its own module namespace, so
 # patches must target the bindings the flow code actually consults.
-_DISCOVER_TARGET = "custom_components.aqara_lanlink.config_flow.discover_hubs"
-_PROBE_TARGET = "custom_components.aqara_lanlink.config_flow.probe_tunnel_host"
-_CLOUD_CLIENT_TARGET = "custom_components.aqara_lanlink.config_flow.AqaraCloudClient"
+_DISCOVER_TARGET = "custom_components.aqaralink.config_flow.discover_hubs"
+_PROBE_TARGET = "custom_components.aqaralink.config_flow.probe_tunnel_host"
+_CLOUD_CLIENT_TARGET = "custom_components.aqaralink.config_flow.AqaraCloudClient"
 _HUB_COORDINATOR_TARGET = (
-    "custom_components.aqara_lanlink.config_flow.HubCoordinator"
+    "custom_components.aqaralink.config_flow.HubCoordinator"
 )
 # Tests that drive a reauth flow to completion (or create-entry flows) trigger
 # HA's config-entry reload, which calls __init__.py:async_setup_entry. That
@@ -75,17 +75,17 @@ _HUB_COORDINATOR_TARGET = (
 # namespace; tests must patch those bindings too if they want to short-circuit
 # the real LANLink session start during reload.
 _INIT_HUB_COORDINATOR_TARGET = (
-    "custom_components.aqara_lanlink.HubCoordinator"
+    "custom_components.aqaralink.HubCoordinator"
 )
 _INIT_CLOUD_CLIENT_TARGET = (
-    "custom_components.aqara_lanlink.AqaraCloudClient"
+    "custom_components.aqaralink.AqaraCloudClient"
 )
 # async_get_clientsession spawns aiohttp's pycares resolver thread, which
 # trips the test plugin's lingering-thread teardown check. Patching it to
 # return a MagicMock keeps __init__.py:async_setup_entry happy without
 # actually opening a session.
 _INIT_CLIENTSESSION_TARGET = (
-    "custom_components.aqara_lanlink.async_get_clientsession"
+    "custom_components.aqaralink.async_get_clientsession"
 )
 
 
@@ -1058,7 +1058,7 @@ class TestSubentryFlowPickDevice:
                 AqaraDeviceSubentryFlow, "_fetch_device_list", _async_devices,
             ),
             patch(
-                "custom_components.aqara_lanlink.device.build_descriptors.build_descriptors",
+                "custom_components.aqaralink.device.build_descriptors.build_descriptors",
                 side_effect=_stub_build,
             ),
         ):
@@ -1202,7 +1202,7 @@ class TestSubentryFlowPickDevice:
                 AqaraDeviceSubentryFlow, "_fetch_device_list", _async_devices,
             ),
             patch(
-                "custom_components.aqara_lanlink.device.build_descriptors.build_descriptors",
+                "custom_components.aqaralink.device.build_descriptors.build_descriptors",
                 side_effect=_stub_build,
             ),
         ):
@@ -1292,7 +1292,7 @@ class TestSubentryFlowPickDevice:
             return [_stub_desc] if model == "lumi.auto.good" else []
 
         with caplog.at_level(
-            logging.WARNING, logger="custom_components.aqara_lanlink.config_flow",
+            logging.WARNING, logger="custom_components.aqaralink.config_flow",
         ):
             with (
                 patch.object(
@@ -1304,7 +1304,7 @@ class TestSubentryFlowPickDevice:
                     AqaraDeviceSubentryFlow, "_fetch_device_list", _async_devices,
                 ),
                 patch(
-                    "custom_components.aqara_lanlink.device.build_descriptors.build_descriptors",
+                    "custom_components.aqaralink.device.build_descriptors.build_descriptors",
                     side_effect=_stub_build,
                 ),
             ):
@@ -1337,7 +1337,7 @@ class TestSubentryFlowPickDevice:
         """The hub config flow must expose the device subentry type via
         ``async_get_supported_subentry_types``. HA's UI consults this
         to render the entry's "Add device" action."""
-        from custom_components.aqara_lanlink.config_flow import (
+        from custom_components.aqaralink.config_flow import (
             AqaraLanLinkConfigFlow,
         )
 
@@ -1411,7 +1411,7 @@ async def _drive_picker_to_extras(
             AqaraDeviceSubentryFlow, "_fetch_device_list", _async_devices,
         ),
         patch(
-            "custom_components.aqara_lanlink.device.build_descriptors.build_descriptors",
+            "custom_components.aqaralink.device.build_descriptors.build_descriptors",
             side_effect=_stub_build,
         ),
     ):
@@ -1662,7 +1662,7 @@ class TestSubentryFlowExtrasPreFill:
         # Prefill also filters candidates against the catalogue's known
         # paths (so cameras whose V3 spec lacks CameraRTSPURL skip the
         # cloud query entirely); stub catalog so the test path is known.
-        from custom_components.aqara_lanlink.device import catalog as _catalog
+        from custom_components.aqaralink.device import catalog as _catalog
         monkeypatch.setattr(
             _catalog, "all_traits_for_model", lambda model: {test_path: None},
         )
@@ -1810,7 +1810,7 @@ class TestSubentryFlowExtrasPreFill:
         3. On submission with ``selected=[pid]``, write that pid to the
            overlay and create the subentry.
         """
-        from custom_components.aqara_lanlink.device.overlay import Overlay, OverlayStore
+        from custom_components.aqaralink.device.overlay import Overlay, OverlayStore
 
         bootstrap_record = _device_record(
             did="lumi1.UNKNOWN", model="lumi.unknown.bootstrap",
@@ -1864,7 +1864,7 @@ class TestSubentryFlowExtrasPreFill:
             # Stub build_descriptors to return [] so the bootstrap branch
             # triggers (same logic _classify uses for uncatalogued models).
             patch(
-                "custom_components.aqara_lanlink.device.build_descriptors.build_descriptors",
+                "custom_components.aqaralink.device.build_descriptors.build_descriptors",
                 return_value=[],
             ),
             # Patch _get_overlay to return an empty overlay (uncatalogued).
@@ -1876,13 +1876,13 @@ class TestSubentryFlowExtrasPreFill:
             # Patch AqaraCloudClient so we don't need real HTTP.
             # The symbol is already imported at module scope in config_flow.py.
             patch(
-                "custom_components.aqara_lanlink.config_flow.AqaraCloudClient",
+                "custom_components.aqaralink.config_flow.AqaraCloudClient",
                 return_value=mock_cloud,
             ),
             # _write_bootstrap_acceptance imports OverlayStore locally, so
             # patch at the source module for both the render and submit calls.
             patch(
-                "custom_components.aqara_lanlink.device.overlay.OverlayStore",
+                "custom_components.aqaralink.device.overlay.OverlayStore",
                 return_value=mock_store,
             ),
         ):
@@ -2167,7 +2167,7 @@ class TestReconfigureFlow:
     async def test_reconfigure_pre_fills_account(self, hass) -> None:
         """Initial render pre-fills the existing account/region so the
         user only has to type the password (or paste new tokens)."""
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
         entry = _hub_entry(hass)
 
         result = await hass.config_entries.flow.async_init(
@@ -2192,7 +2192,7 @@ class TestReconfigureFlow:
         """Pasting fresh user_id + token via the Reconfigure menu must
         update the entry data in place and abort with
         ``reconfigure_successful``. Hub coordinates stay untouched."""
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
         entry = _hub_entry(hass)
 
         cloud_client = MagicMock()
@@ -2418,7 +2418,7 @@ class TestOptionsFlow:
             "async_prefill_extras",
             AsyncMock(return_value=None),
         ), patch(
-            "custom_components.aqara_lanlink.config_flow.is_camera_model",
+            "custom_components.aqaralink.config_flow.is_camera_model",
             side_effect=lambda model: model == "lumi.camera.agl005",
         ):
             result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -2448,7 +2448,7 @@ class TestOptionsFlow:
         ), patch.object(
             G100Device, "async_prefill_extras", AsyncMock(return_value=None),
         ), patch(
-            "custom_components.aqara_lanlink.config_flow.is_camera_model",
+            "custom_components.aqaralink.config_flow.is_camera_model",
             side_effect=_icm,
         ):
             result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -2495,7 +2495,7 @@ class TestOptionsFlow:
             "async_prefill_extras",
             AsyncMock(return_value=None),
         ), patch(
-            "custom_components.aqara_lanlink.config_flow.is_camera_model",
+            "custom_components.aqaralink.config_flow.is_camera_model",
             side_effect=lambda model: model == "lumi.camera.agl005",
         ):
             result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -2507,7 +2507,7 @@ class TestOptionsFlow:
             "get_device_class",
             side_effect=lambda model: G100Device if model == "lumi.camera.agl005" else None,
         ), patch(
-            "custom_components.aqara_lanlink.config_flow.is_camera_model",
+            "custom_components.aqaralink.config_flow.is_camera_model",
             side_effect=lambda model: model == "lumi.camera.agl005",
         ):
             result = await hass.config_entries.options.async_configure(

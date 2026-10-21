@@ -12,7 +12,7 @@ _BY_MODEL_DIR = _CATALOGUE_DIR / "by-model"
 _INDEX_MD = _CATALOGUE_DIR / "index.md"
 _README_MD = _CATALOGUE_DIR / "README.md"
 _MODELS_DIR = (
-    _REPO_ROOT / "custom_components" / "aqara_lanlink" / "device" / "models"
+    _REPO_ROOT / "custom_components" / "aqaralink" / "device" / "models"
 )
 
 

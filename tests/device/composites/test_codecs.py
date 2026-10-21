@@ -5,8 +5,8 @@ import json
 import pytest
 from datetime import time
 
-from custom_components.aqara_lanlink.device.composites import CODECS
-from custom_components.aqara_lanlink.device.composites.codecs import (
+from custom_components.aqaralink.device.composites import CODECS
+from custom_components.aqaralink.device.composites.codecs import (
     BrightnessCodec,
     CompositeField,
     PackedPeriodCodec,
@@ -105,7 +105,7 @@ def test_schedule_decode_rejects_bad_repeat_length():
 # --- Phase A: JSON-blob unwrap/decompose codecs ---
 
 def test_region_json_unwraps_hex():
-    from custom_components.aqara_lanlink.device.composites.codecs import RegionJsonCodec
+    from custom_components.aqaralink.device.composites.codecs import RegionJsonCodec
     R = RegionJsonCodec()
     w = '{"detect_region": "3fffffffffffffffffffffffffffffffffff"}'
     assert R.decode(w) == {"region": "3fffffffffffffffffffffffffffffffffff"}
@@ -116,7 +116,7 @@ def test_region_json_unwraps_hex():
 
 def test_region_json_unwraps_int_array():
     import json
-    from custom_components.aqara_lanlink.device.composites.codecs import RegionJsonCodec
+    from custom_components.aqaralink.device.composites.codecs import RegionJsonCodec
     R = RegionJsonCodec()
     w = '{"detect_region": [0,0,1,1,1,1]}'
     d = R.decode(w)
@@ -125,7 +125,7 @@ def test_region_json_unwraps_int_array():
 
 def test_bbox_region_decompose_and_field_platforms():
     import json
-    from custom_components.aqara_lanlink.device.composites.codecs import BboxRegionJsonCodec
+    from custom_components.aqaralink.device.composites.codecs import BboxRegionJsonCodec
     B = BboxRegionJsonCodec()
     # device emits keys in varying order -> decode must be order-agnostic
     assert B.decode('{"x_begin":3,"y_end":8,"y_begin":0,"x_end":11}') == \
@@ -137,7 +137,7 @@ def test_bbox_region_decompose_and_field_platforms():
 
 def test_ptz_preset_decompose():
     import json
-    from custom_components.aqara_lanlink.device.composites.codecs import PtzPresetJsonCodec
+    from custom_components.aqaralink.device.composites.codecs import PtzPresetJsonCodec
     P = PtzPresetJsonCodec()
     assert P.decode('{"mode": 0, "x": 999, "y": 999}') == {"mode": 0, "x": 999, "y": 999}
     assert json.loads(P.encode({"mode": 1, "x": 120, "y": 240})) == {"mode": 1, "x": 120, "y": 240}

@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import SwitchDescriptor
-from custom_components.aqara_lanlink.switch import AqaraSwitch, async_setup_entry
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import SwitchDescriptor
+from custom_components.aqaralink.switch import AqaraSwitch, async_setup_entry
 
 from .conftest import make_device, make_hub, make_subentry
 

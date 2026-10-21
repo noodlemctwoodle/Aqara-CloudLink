@@ -12,15 +12,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.base import (
+from custom_components.aqaralink.device.base import (
     AutoDerivedDevice,
     resolve_subentry_metadata,
 )
-from custom_components.aqara_lanlink.device.camera.base import (
+from custom_components.aqaralink.device.camera.base import (
     AutoDerivedCameraDevice,
     CameraDevice,
 )
-from custom_components.aqara_lanlink.device import catalog
+from custom_components.aqaralink.device import catalog
 
 
 def _fake_subentry(model: str, display_name: str = "G400 Test") -> MagicMock:

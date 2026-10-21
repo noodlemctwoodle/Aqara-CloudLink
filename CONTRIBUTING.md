@@ -4,7 +4,7 @@ The most common contribution to this integration is editing a device model's
 `overrides.py` file. This guide covers that workflow from start to finish.
 
 Device support is data-driven. Each supported model has a package under
-`custom_components/aqara_lanlink/device/models/<pkg>/` that contains three
+`custom_components/aqaralink/device/models/<pkg>/` that contains three
 files: `data.json` (auto-generated from Aqara's V3 cloud spec, should not be hand edited), `overrides.py` (the hand-edited correction layer, preserved across
 regeneration), and a three-line `__init__.py` shim. The integration reads those
 packages at startup and builds Home Assistant entities from the combined
@@ -31,7 +31,7 @@ custom component:
 git clone https://github.com/<your-fork>/aqara_lan_talk.git
 ```
 
-The integration source lives at `custom_components/aqara_lanlink/` inside the
+The integration source lives at `custom_components/aqaralink/` inside the
 repo root. Symlink or mount that directory into your HA instance's
 `custom_components/` folder. The standard HA developer setup docs cover the
 rest.
@@ -60,8 +60,8 @@ reference.
 The model appears in the catalogue but one or more traits are absent from the
 generated entities.
 
-Run the `aqara_lanlink.scan_device` service against the device. The integration
-scans the Aqara V1 API cloud and raises a `scan_review` Repair flow where you can accept the missing traits. Once accepted, run `aqara_lanlink.export_overlay`; it posts a
+Run the `aqaralink.scan_device` service against the device. The integration
+scans the Aqara V1 API cloud and raises a `scan_review` Repair flow where you can accept the missing traits. Once accepted, run `aqaralink.export_overlay`; it posts a
 Persistent Notification with a ready-to-paste `TraitSpec` snippet. Paste that
 snippet into the model's `overrides.py`, test the trait and assess its usefullness and functionality. If the trait proves useful and works correctly open a PR.
 
@@ -84,7 +84,7 @@ an `overrides.py` polish PR (Situation A or B above).
 Each model package has an `overrides.py` with a single exported dict:
 
 ```python
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 OVERRIDES: dict[str, TraitSpec | None] = {
     # Replace the generated entry at this wire path:
@@ -107,7 +107,7 @@ either a full `TraitSpec(...)` that replaces the generated entry at that wire
 path, or `None` to suppress the entry entirely.
 
 `overrides.py` is executed standalone by the loader, so every `TraitSpec` in
-`OVERRIDES` must be self-contained. The `aqara_lanlink.export_overlay` service
+`OVERRIDES` must be self-contained. The `aqaralink.export_overlay` service
 emits a ready-to-paste snippet with all required fields populated.
 
 The full field reference, valid `platform` values, `device_class` constraints,
@@ -150,7 +150,7 @@ A typical per-module reset fixture looks like:
 
 ```python
 import pytest
-from custom_components.aqara_lanlink.device import traits as traits_catalog
+from custom_components.aqaralink.device import traits as traits_catalog
 
 @pytest.fixture(autouse=True)
 def _reset_traits():

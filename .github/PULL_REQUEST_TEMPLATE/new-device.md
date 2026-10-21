@@ -18,7 +18,7 @@ Brief description of which corrections are applied and why the generated
 
 - [ ] New `overrides.py` entry in an existing model package
 - [ ] New model package (new directory under
-      `custom_components/aqara_lanlink/device/models/<package>/`)
+      `custom_components/aqaralink/device/models/<package>/`)
 - [ ] White-label addition (display-name correction for a model that shares
       a package with a related device)
 
@@ -26,7 +26,7 @@ Brief description of which corrections are applied and why the generated
 
 The change is in one or more `overrides.py` files. Briefly note which entries
 were added or corrected (full `TraitSpec(...)` overrides, `None` drops, or
-display-name fixes). If you used `aqara_lanlink.export_overlay` to generate
+display-name fixes). If you used `aqaralink.export_overlay` to generate
 the initial snippet, mention it.
 
 See `docs/adding-device-support.md` and `docs/overrides.md` for the mechanics.

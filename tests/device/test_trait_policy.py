@@ -1,7 +1,7 @@
 """Unit tests for the V3 trait_policy module."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device import trait_policy
+from custom_components.aqaralink.device import trait_policy
 
 
 def test_descriptor_function_drops():

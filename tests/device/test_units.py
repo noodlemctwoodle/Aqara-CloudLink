@@ -1,7 +1,7 @@
 """Tests for Aqara -> Home Assistant unit-string normalization."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.units import normalize_unit
+from custom_components.aqaralink.device.units import normalize_unit
 
 
 def test_normalizes_composed_degree_celsius():

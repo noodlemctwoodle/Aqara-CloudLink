@@ -5,7 +5,7 @@ No real cloud calls: ``bootstrap`` is exercised with a mock client whose
 ``query_camera_p2p_info`` / ``request_camera_p2p_sign`` are coroutines returning
 canned dicts. Async port of tools/ptz_poc/tests/test_auth.py.
 """
-from custom_components.aqara_lanlink.ptz import bootstrap, ioctl
+from custom_components.aqaralink.ptz import bootstrap, ioctl
 
 CAPTURED_P2P_ID = "AQARADE-359455-ZUXDL"
 CAPTURED_DID_HEX = "415141524144450000057c1f5a5558444c000000"

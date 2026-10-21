@@ -1,4 +1,4 @@
-"""Tests for the rid-data renderers in aqara_lanlink.export_overlay.
+"""Tests for the rid-data renderers in aqaralink.export_overlay.
 
 Covers Task C: render the owner-discovered wire_path<->rid map (Part 1) as a
 pasteable Python snippet.
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import ast
 
-from custom_components.aqara_lanlink.services.export_overlay import (
+from custom_components.aqaralink.services.export_overlay import (
     render_resource_id_map,
 )
 

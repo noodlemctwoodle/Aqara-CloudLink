@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import device_class_map
-from custom_components.aqara_lanlink.device.device_class_map import (
+from custom_components.aqaralink.device import device_class_map
+from custom_components.aqaralink.device.device_class_map import (
     AQARA_DEVICE_TYPE_TO_HA,
     device_class_for,
 )

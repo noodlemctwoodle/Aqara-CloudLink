@@ -15,10 +15,10 @@ jobs:
 
       - name: Create zip
         run: |
-          cd custom_components/aqara_lanlink
-          zip -r ../../aqara_lanlink.zip . \
+          cd custom_components/aqaralink
+          zip -r ../../aqaralink.zip . \
 
       - name: Upload release asset
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" aqara_lanlink.zip --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" aqaralink.zip --clobber

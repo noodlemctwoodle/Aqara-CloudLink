@@ -12,7 +12,7 @@ import json
 import re
 from pathlib import Path
 
-from custom_components.aqara_lanlink.device import models as _models_pkg
+from custom_components.aqaralink.device import models as _models_pkg
 
 _MODELS = Path(_models_pkg.__file__).resolve().parent
 # Common/Unified CJK ideographs -- enough to catch leaked CN labels/names.

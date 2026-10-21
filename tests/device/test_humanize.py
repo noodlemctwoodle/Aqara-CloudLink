@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device.humanize import humanize_name
+from custom_components.aqaralink.device.humanize import humanize_name
 
 
 @pytest.mark.parametrize("raw,expected", [

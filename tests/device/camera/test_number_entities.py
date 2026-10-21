@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.camera.number_entities import (
+from custom_components.aqaralink.device.camera.number_entities import (
     DEFAULT_DETECTION_CLEAR_DELAY_S,
     DetectionClearDelayNumber,
 )
@@ -48,10 +48,10 @@ async def test_async_added_to_hass_restores_previous_value():
         return_value=SimpleNamespace(native_value=210.0),
     )
     with patch(
-        "custom_components.aqara_lanlink.device.camera.number_entities"
+        "custom_components.aqaralink.device.camera.number_entities"
         ".AqaraEntity.async_added_to_hass", new=AsyncMock(),
     ), patch(
-        "custom_components.aqara_lanlink.device.camera.number_entities"
+        "custom_components.aqaralink.device.camera.number_entities"
         ".RestoreNumber.async_added_to_hass", new=AsyncMock(),
     ):
         await n.async_added_to_hass()
@@ -62,10 +62,10 @@ async def test_async_added_to_hass_keeps_default_when_no_restore():
     n = DetectionClearDelayNumber(_hub(), MagicMock(), _subentry())
     n.async_get_last_number_data = AsyncMock(return_value=None)
     with patch(
-        "custom_components.aqara_lanlink.device.camera.number_entities"
+        "custom_components.aqaralink.device.camera.number_entities"
         ".AqaraEntity.async_added_to_hass", new=AsyncMock(),
     ), patch(
-        "custom_components.aqara_lanlink.device.camera.number_entities"
+        "custom_components.aqaralink.device.camera.number_entities"
         ".RestoreNumber.async_added_to_hass", new=AsyncMock(),
     ):
         await n.async_added_to_hass()

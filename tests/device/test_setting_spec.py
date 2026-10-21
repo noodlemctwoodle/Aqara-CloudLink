@@ -1,4 +1,4 @@
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device.settings import SettingSpec
 
 
 def test_setting_spec_defaults():

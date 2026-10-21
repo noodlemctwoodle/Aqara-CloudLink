@@ -17,8 +17,8 @@ What we assert:
 """
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _v3_trait(wire_path: str, **overrides) -> TraitSpec:
@@ -88,7 +88,7 @@ def test_build_descriptors_consumes_v3_shaped_traits(monkeypatch) -> None:
     and verifies build_descriptors completes without error and the resulting
     descriptors' wire-path keys match the catalogue keys.
     """
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
 
     model = "test.v3.shape"
     # Minimal V3-shaped catalogue: one occupancy boolean and one temperature
@@ -137,7 +137,7 @@ def test_v3_and_pre_v3_traits_coexist_in_one_catalogue(monkeypatch) -> None:
     entries (without) is consumed cleanly by build_descriptors. This proves
     the new fields' defaults don't break the existing derive pipeline.
     """
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
 
     model = "test.mixed.shape"
     catalogue = {

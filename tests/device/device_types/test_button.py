@@ -1,11 +1,11 @@
 """Tests for the Button deviceType composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, button, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import EventDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.descriptors import EventDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:
@@ -57,7 +57,7 @@ def test_button_emits_no_event_when_buttonevent_missing_but_falls_back_for_other
     """A Button endpoint with no ButtonEvent trait emits no Event entity, but
     any other traits still flow through _fallback so config/diagnostic knobs
     surface as Number/Switch/etc. -- they are not dropped silently."""
-    from custom_components.aqara_lanlink.device.descriptors import BinarySensorDescriptor
+    from custom_components.aqaralink.device.descriptors import BinarySensorDescriptor
     traits = {"2.135.99999": TraitSpec(
         id="2.135.99999", wire_path="2.135.99999",
         function_code="Button", trait_code="OtherTrait",
@@ -68,6 +68,6 @@ def test_button_emits_no_event_when_buttonevent_missing_but_falls_back_for_other
     descs = button.compose(endpoint_id=2, traits=traits, context=_ctx())
     # No EventDescriptor (no ButtonEvent), but the unknown bool trait surfaces
     # via _fallback as a BinarySensor rather than being dropped.
-    from custom_components.aqara_lanlink.device.descriptors import EventDescriptor
+    from custom_components.aqaralink.device.descriptors import EventDescriptor
     assert not any(isinstance(d, EventDescriptor) for d in descs)
     assert any(isinstance(d, BinarySensorDescriptor) for d in descs)

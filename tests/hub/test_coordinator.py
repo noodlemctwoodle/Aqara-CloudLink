@@ -17,16 +17,16 @@ import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.hub import coordinator
-from custom_components.aqara_lanlink.hub.coordinator import HubCoordinator
-from custom_components.aqara_lanlink.hub.protocol import (
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.hub import coordinator
+from custom_components.aqaralink.hub.coordinator import HubCoordinator
+from custom_components.aqaralink.hub.protocol import (
     LANReport,
     LANLINK_CMD_CHECKIN_DONE, LANLINK_CMD_READ, LANLINK_CMD_READ_DONE,
     LANLINK_CMD_REPORT, LANLINK_CMD_TOPOLOGY, LANLINK_CMD_WRITE,
     LANLINK_CMD_WRITE_DONE, LANLINK_TYPE_DEVICE, LANLINK_TYPE_SESSION,
 )
-from custom_components.aqara_lanlink.hub.topology import TopologyDevice
+from custom_components.aqaralink.hub.topology import TopologyDevice
 
 
 # Stand-in for AttrSpec (lands in Chunk 3). Frozen dataclasses are
@@ -530,7 +530,7 @@ class TestAsyncDispatch:
 class TestEndpointRefresh:
     async def test_mdns_discovery_updates_host_port_on_connect_failure(self, monkeypatch):
         """First connect fails; mDNS discovers new port; second connect succeeds."""
-        from custom_components.aqara_lanlink.hub.mdns import AqaraServiceRecord
+        from custom_components.aqaralink.hub.mdns import AqaraServiceRecord
 
         t_fail = FakeTunnel(device_id=HUB_DID)
         t_fail.connect_error = OSError("connection refused")
@@ -546,7 +546,7 @@ class TestEndpointRefresh:
             host=HUB_IP, port=99999, did=HUB_DID, name="Aqara-Hub",
         )
         monkeypatch.setattr(
-            "custom_components.aqara_lanlink.hub.coordinator.discover_hub_by_did",
+            "custom_components.aqaralink.hub.coordinator.discover_hub_by_did",
             AsyncMock(return_value=new_record),
         )
 
@@ -560,25 +560,25 @@ class TestEndpointRefresh:
         await coord.stop()
 
     async def test_refresh_reports_whether_endpoint_changed(self, monkeypatch):
-        from custom_components.aqara_lanlink.hub.mdns import AqaraServiceRecord
+        from custom_components.aqaralink.hub.mdns import AqaraServiceRecord
 
         coord, _ = await _coord_with(monkeypatch, [FakeTunnel(device_id=HUB_DID)])
         rec = AqaraServiceRecord(host=HUB_IP, port=99999, did=HUB_DID, name="x")
         monkeypatch.setattr(
-            "custom_components.aqara_lanlink.hub.coordinator.discover_hub_by_did",
+            "custom_components.aqaralink.hub.coordinator.discover_hub_by_did",
             AsyncMock(return_value=rec),
         )
         assert await coord._refresh_endpoint_via_mdns() is True   # changed
         assert await coord._refresh_endpoint_via_mdns() is False  # same now
         monkeypatch.setattr(
-            "custom_components.aqara_lanlink.hub.coordinator.discover_hub_by_did",
+            "custom_components.aqaralink.hub.coordinator.discover_hub_by_did",
             AsyncMock(return_value=None),
         )
         assert await coord._refresh_endpoint_via_mdns() is False  # no result
 
     async def test_endpoint_change_skips_reconnect_backoff(self, monkeypatch):
         """When mDNS adopts a new port, retry immediately (no backoff sleep)."""
-        from custom_components.aqara_lanlink.hub.mdns import AqaraServiceRecord
+        from custom_components.aqaralink.hub.mdns import AqaraServiceRecord
 
         t_fail = FakeTunnel(device_id=HUB_DID)
         t_fail.connect_error = OSError("connection refused")
@@ -592,7 +592,7 @@ class TestEndpointRefresh:
 
         monkeypatch.setattr(coord, "_reconnect_sleep", fake_sleep)
         monkeypatch.setattr(
-            "custom_components.aqara_lanlink.hub.coordinator.discover_hub_by_did",
+            "custom_components.aqaralink.hub.coordinator.discover_hub_by_did",
             AsyncMock(return_value=AqaraServiceRecord(
                 host=HUB_IP, port=99999, did=HUB_DID, name="x",
             )),
@@ -613,7 +613,7 @@ class TestEndpointRefresh:
         original_port = coord._port
 
         monkeypatch.setattr(
-            "custom_components.aqara_lanlink.hub.coordinator.discover_hub_by_did",
+            "custom_components.aqaralink.hub.coordinator.discover_hub_by_did",
             AsyncMock(return_value=None),
         )
 
@@ -1652,7 +1652,7 @@ class TestAsyncGetTopology:
 
         with caplog.at_level(
             logging.WARNING,
-            logger="custom_components.aqara_lanlink.hub.coordinator",
+            logger="custom_components.aqaralink.hub.coordinator",
         ):
             await coord.async_get_topology(cloud_client)
 
@@ -1692,7 +1692,7 @@ class TestAsyncGetTopology:
 
         with caplog.at_level(
             logging.WARNING,
-            logger="custom_components.aqara_lanlink.hub.coordinator",
+            logger="custom_components.aqaralink.hub.coordinator",
         ):
             await coord.async_get_topology(cloud_client)
 

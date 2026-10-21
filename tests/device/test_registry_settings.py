@@ -8,9 +8,9 @@ import types
 
 import pytest
 
-from custom_components.aqara_lanlink.device import registry
+from custom_components.aqaralink.device import registry
 
-_SYNTH_PREFIX = "custom_components.aqara_lanlink.device.models.synth_"
+_SYNTH_PREFIX = "custom_components.aqaralink.device.models.synth_"
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ def _reset_registry():
 
 
 def _synth_package(monkeypatch, tmp_path, subpkg_name: str, init_src: str) -> None:
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     path_str = str(tmp_path)
     existing = sys.modules.get(pkg_name)
     if existing is not None and getattr(existing, "_synth_test_pkg", False):
@@ -45,7 +45,7 @@ def _synth_package(monkeypatch, tmp_path, subpkg_name: str, init_src: str) -> No
 
 def test_settings_and_power_class_indexed_per_model(monkeypatch, tmp_path):
     _synth_package(monkeypatch, tmp_path, "synth_settings", """
-        from custom_components.aqara_lanlink.device.settings import SettingSpec
+        from custom_components.aqaralink.device.settings import SettingSpec
         MODELS = ("lumi.test.s1", "lumi.test.s2")
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Settings Pkg"
@@ -62,7 +62,7 @@ def test_settings_and_power_class_indexed_per_model(monkeypatch, tmp_path):
 
 def test_reset_clears_settings_indices(monkeypatch, tmp_path):
     _synth_package(monkeypatch, tmp_path, "synth_settings_reset", """
-        from custom_components.aqara_lanlink.device.settings import SettingSpec
+        from custom_components.aqaralink.device.settings import SettingSpec
         MODELS = ("lumi.test.sr",)
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Settings Reset Pkg"

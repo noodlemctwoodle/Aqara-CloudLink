@@ -1,11 +1,11 @@
 """Tests for the PressureSensor deviceType composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, pressure_sensor, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import SensorDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.descriptors import SensorDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
 

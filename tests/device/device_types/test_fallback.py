@@ -1,12 +1,12 @@
 """Tests for the _fallback composer (unknown deviceType handler)."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import _base, _fallback
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.device_types import _base, _fallback
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor, SensorDescriptor, SwitchDescriptor,
     SelectDescriptor, NumberDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:
@@ -179,8 +179,8 @@ def test_fallback_emits_button_descriptor_when_trait_in_button_traits(monkeypatc
     test exercises the mechanism even though no production traits
     currently use it (the Identify experiment was rolled back).
     """
-    from custom_components.aqara_lanlink.device import trait_policy
-    from custom_components.aqara_lanlink.device.descriptors import ButtonDescriptor
+    from custom_components.aqaralink.device import trait_policy
+    from custom_components.aqaralink.device.descriptors import ButtonDescriptor
     monkeypatch.setitem(
         trait_policy.BUTTON_TRAITS, ("TestFunction", "TestTrigger"), "42",
     )
@@ -204,7 +204,7 @@ def test_non_button_writable_int_still_renders_as_number():
     short-circuit -- any other writable int with min/max still becomes a
     NumberDescriptor as before.
     """
-    from custom_components.aqara_lanlink.device.descriptors import NumberDescriptor
+    from custom_components.aqaralink.device.descriptors import NumberDescriptor
     traits = {"2.133.33125": TraitSpec(
         id="2.133.33125", wire_path="2.133.33125",
         function_code="LevelControl", trait_code="OnTransitionTime",

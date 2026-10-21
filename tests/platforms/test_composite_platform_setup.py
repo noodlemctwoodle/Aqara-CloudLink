@@ -14,36 +14,36 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.composites import CODECS
-from custom_components.aqara_lanlink.device.composites.controller import (
+from custom_components.aqaralink.device import catalog
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.composites import CODECS
+from custom_components.aqaralink.device.composites.controller import (
     CompositeController,
 )
-from custom_components.aqara_lanlink.device.composites.entities import (
+from custom_components.aqaralink.device.composites.entities import (
     CompositeNumber,
     CompositeSwitch,
     CompositeText,
     CompositeTime,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     NumberDescriptor,
     SwitchDescriptor,
     TextDescriptor,
 )
-from custom_components.aqara_lanlink.number import (
+from custom_components.aqaralink.number import (
     AqaraNumber,
     async_setup_entry as number_setup,
 )
-from custom_components.aqara_lanlink.switch import (
+from custom_components.aqaralink.switch import (
     AqaraSwitch,
     async_setup_entry as switch_setup,
 )
-from custom_components.aqara_lanlink.text import (
+from custom_components.aqaralink.text import (
     AqaraText,
     async_setup_entry as text_setup,
 )
-from custom_components.aqara_lanlink.time import async_setup_entry as time_setup
+from custom_components.aqaralink.time import async_setup_entry as time_setup
 
 from .conftest import make_device, make_hub, make_subentry
 

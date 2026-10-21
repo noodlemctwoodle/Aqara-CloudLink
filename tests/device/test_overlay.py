@@ -12,11 +12,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.overlay import (
+from custom_components.aqaralink.device.overlay import (
     Overlay,
     OverlayStore,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _make_hass():

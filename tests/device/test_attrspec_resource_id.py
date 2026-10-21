@@ -1,4 +1,4 @@
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.attrs import AttrSpec
 
 
 def test_attrspec_carries_resource_id():

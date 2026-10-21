@@ -1,6 +1,6 @@
 """Tests for the pure wire-path -> rid bridge from a cloud device scan."""
 
-from custom_components.aqara_lanlink.device.setting_discovery import (
+from custom_components.aqaralink.device.setting_discovery import (
     extract_resource_id_map,
 )
 

@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import (
     Effect,
     LightDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.light import AqaraLight
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.light import AqaraLight
 
 from .conftest import make_device, make_hub, make_subentry
 
@@ -313,7 +313,7 @@ async def test_async_turn_on_dynamic_effect_calls_cloud_run_sequence():
 @pytest.mark.asyncio
 async def test_async_turn_on_dynamic_effect_cloud_failure_raises_home_assistant_error():
     """Cloud unreachable during dynamic-effect activation: raise HomeAssistantError."""
-    from custom_components.aqara_lanlink.hub.cloud_client import AqaraAuthError
+    from custom_components.aqaralink.hub.cloud_client import AqaraAuthError
     from homeassistant.exceptions import HomeAssistantError
 
     dyn = Effect(name="Aurora", seq_id="100001")

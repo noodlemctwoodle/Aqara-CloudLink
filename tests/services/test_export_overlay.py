@@ -1,4 +1,4 @@
-"""Tests for aqara_lanlink.export_overlay."""
+"""Tests for aqaralink.export_overlay."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.services.export_overlay import (
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.services.export_overlay import (
     _quote,
     async_handle_export,
     render_overlay,

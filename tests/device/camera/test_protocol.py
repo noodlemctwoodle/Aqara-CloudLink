@@ -3,14 +3,14 @@
 import struct
 import pytest
 
-from custom_components.aqara_lanlink.device.camera.protocol import (
+from custom_components.aqaralink.device.camera.protocol import (
     crc16_kermit,
     build_packet,
     parse_packet,
     build_rtp_header,
     extract_adts_frames,
 )
-from custom_components.aqara_lanlink.device.camera.const import (
+from custom_components.aqaralink.device.camera.const import (
     MAGIC,
     TYPE_START_VOICE,
     TYPE_STOP_VOICE,

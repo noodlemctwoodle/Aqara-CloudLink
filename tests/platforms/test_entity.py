@@ -6,10 +6,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.const import DOMAIN
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import SwitchDescriptor
-from custom_components.aqara_lanlink.entity import AqaraEntity
+from custom_components.aqaralink.const import DOMAIN
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import SwitchDescriptor
+from custom_components.aqaralink.entity import AqaraEntity
 
 from .conftest import make_device, make_hub, make_subentry
 

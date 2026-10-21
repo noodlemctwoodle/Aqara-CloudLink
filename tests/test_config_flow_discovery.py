@@ -4,9 +4,9 @@ from __future__ import annotations
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from custom_components.aqara_lanlink.hub.mdns import AqaraServiceRecord
-from custom_components.aqara_lanlink.hub.probe import ProbeResult
-from custom_components.aqara_lanlink import config_flow
+from custom_components.aqaralink.hub.mdns import AqaraServiceRecord
+from custom_components.aqaralink.hub.probe import ProbeResult
+from custom_components.aqaralink import config_flow
 
 
 async def test_discovery_drops_non_tunnel_hosts(hass):

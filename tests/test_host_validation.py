@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.host_validation import (
+from custom_components.aqaralink.host_validation import (
     is_safe_host,
     validate_host,
 )

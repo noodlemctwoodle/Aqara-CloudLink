@@ -7,20 +7,20 @@ import types
 import pytest
 from homeassistant.const import EntityCategory
 
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.build_descriptors import (
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.build_descriptors import (
     build_descriptors,
     build_setting_descriptors,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     ButtonDescriptor,
     NumberDescriptor,
     SelectDescriptor,
     SwitchDescriptor,
     TextDescriptor,
 )
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.settings import SettingSpec
 
 _MODEL = "lumi.fake.setdesc"
 

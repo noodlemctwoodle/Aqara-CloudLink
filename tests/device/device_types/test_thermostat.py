@@ -5,13 +5,13 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.helpers.entity import EntityCategory
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, thermostat, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     NumberDescriptor, SelectDescriptor, SensorDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:
@@ -169,5 +169,5 @@ def test_irdevice_devicetype_routes_to_fallback_composer():
     """IRDevice endpoints only carry writable enums (IRType, IRKey). Registering
     them at _fallback.compose suppresses the unknown-deviceType warning while
     keeping the per-trait Select entity output that _fallback already produces."""
-    from custom_components.aqara_lanlink.device.device_types import _fallback
+    from custom_components.aqaralink.device.device_types import _fallback
     assert get_composer("IRDevice") is _fallback.compose

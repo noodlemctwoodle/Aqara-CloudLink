@@ -1,13 +1,13 @@
 """Tests for the WindowCovering deviceType composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, window_covering, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     NumberDescriptor, SensorDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.components.sensor import SensorDeviceClass
 
 

@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.aqara_lanlink import config_flow as config_flow_module
-from custom_components.aqara_lanlink.config_flow import AqaraDeviceSubentryFlow
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink import config_flow as config_flow_module
+from custom_components.aqaralink.config_flow import AqaraDeviceSubentryFlow
+from custom_components.aqaralink.const import (
     CONF_ACTIVATION_HOST,
     CONF_ACTIVATION_PORT,
     CONF_AQARA_ACCOUNT,

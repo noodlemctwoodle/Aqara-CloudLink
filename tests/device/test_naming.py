@@ -13,9 +13,9 @@ Rules under test:
 """
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types._build import build_descriptor
-from custom_components.aqara_lanlink.device.naming import disambiguate_names
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.device_types._build import build_descriptor
+from custom_components.aqaralink.device.naming import disambiguate_names
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _spec(ep: int, attr: int, *, name: str, data_type: str, fn: str, tc: str,

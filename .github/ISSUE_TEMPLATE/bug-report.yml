@@ -66,7 +66,7 @@ body:
       label: Integration version
       description: >
         The Aqara LANLink version (HACS, or the "version" field in
-        custom_components/aqara_lanlink/manifest.json).
+        custom_components/aqaralink/manifest.json).
       placeholder: "0.1.0"
     validations:
       required: true
@@ -112,7 +112,7 @@ body:
     attributes:
       label: Relevant log output
       description: >
-        Home Assistant logs for the aqara_lanlink integration. Enable debug
+        Home Assistant logs for the aqaralink integration. Enable debug
         logging (Settings > Devices & Services > Aqara LANLink > Enable debug
         logging) to capture more detail. Redact any account identifiers if you
         prefer.

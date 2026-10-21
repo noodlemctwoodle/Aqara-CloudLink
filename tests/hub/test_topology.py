@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.topology import (
+from custom_components.aqaralink.hub.topology import (
     TopologyDevice,
     parse_cloud_device,
     parse_lanlink_topology_push,

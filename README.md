@@ -1,9 +1,20 @@
-# Aqara LANLink - local control Home Assistant integration for Aqara devices
+# AqaraLink - LAN and cloud Home Assistant integration for Aqara devices
 
-A local-push Home Assistant integration for Aqara hubs,
-their sub-devices, and cameras giving local control over the network LAN, using the reverse-engineered Aqara LANLink and P2P protocols.
+A Home Assistant integration for Aqara hubs, their sub-devices and cameras, using the
+reverse-engineered Aqara LANLink and P2P protocols over the local network.
 
-Device state is pushed from the hub to Home Assistant over a persistent encrypted TCP LAN connection; no polling or cloud roundtrip.
+Device state is pushed from the hub over a persistent encrypted TCP LAN connection. Where a
+value exists only in the Aqara cloud and the hub does not serve it over LANLink, the
+integration reads that value from the cloud instead, so the entity is still available.
+
+> **A fork.** AqaraLink builds on
+> [absent42/Aqara-LANLink](https://github.com/absent42/Aqara-LANLink) by Dan Gibson, which is
+> local-push only by design. This fork adds cloud-backed values for data the hub does not
+> serve locally. All the local protocol work is upstream's; see
+> [LICENSE](LICENSE) (MIT).
+>
+> **It replaces `aqara_lanlink`; do not run both.** The hub allows one LANLink session per
+> Aqara account, so two integrations would fight over it. Remove the other one first.
 
 Aqara does not endorse or support this integration. The LANLink protocol was reverse-engineered from Aqara app and firmware; future firmware updates may break compatibility without warning.
 
@@ -12,7 +23,8 @@ Aqara does not endorse or support this integration. The LANLink protocol was rev
 ## Features
 
 - **~379 Aqara device models supported** out of the box, from a shipped device catalogue.
-- **Local push, no polling** - device state is pushed from the hub over a persistent encrypted LANLink tunnel; state changes reach Home Assistant with no cloud round-trip.
+- **Local push for everything the hub serves** - device state is pushed from the hub over a persistent encrypted LANLink tunnel, with no cloud round-trip.
+- **Cloud-backed values where LANLink has none** - e.g. per-socket power and energy on the Wall Outlet H2 (`lumi.plug.aeu002`), which the hub only exposes as a device total. Marked `cloud_poll` in the device catalogue and polled on an interval; everything else stays local.
 - **Multiple Aqara hubs in a cluster**, and mutliple hubs bound to different regions.
 - **Multiple entity types** - switches, sensors, binary sensors, lights, numbers, selects, buttons, and events are derived from each device's catalogue with names, values and labels.
 - **Local device settings** - sub-device configuration settings (child lock, indicator light, button mode, power-off memory, max power, find/restart etc) are exposed as switch, select, number, text, and button entities and written fully locally over LANLink by resource ID.
@@ -80,13 +92,13 @@ repository:
 
 ### Manual install
 
-1. Copy the `custom_components/aqara_lanlink/` directory into your Home
+1. Copy the `custom_components/aqaralink/` directory into your Home
    Assistant configuration directory:
 
    ```
    <config>/
      custom_components/
-       aqara_lanlink/
+       aqaralink/
          __init__.py
          manifest.json
          ...
@@ -144,10 +156,10 @@ list.
 Cameras support RTSP streaming and two-way audio via the
 [AlexxIT WebRTC custom card](https://github.com/AlexxIT/WebRTC) with a `url:`
 stream reference (not `entity:`). The integration auto-registers a go2rtc
-stream named `aqara_lanlink_<camera-IP-with-dots-as-underscores>` (e.g. camera
-at 192.168.1.50 -> `aqara_lanlink_192_168_1_50`). PTZ-capable cameras
+stream named `aqaralink_<camera-IP-with-dots-as-underscores>` (e.g. camera
+at 192.168.1.50 -> `aqaralink_192_168_1_50`). PTZ-capable cameras
 additionally get pan/tilt/zoom buttons, a preset selector, and a single
-`aqara_lanlink.ptz` service (one `command` field covers move/stop/zoom/preset,
+`aqaralink.ptz` service (one `command` field covers move/stop/zoom/preset,
 so the WebRTC card can drive PTZ); this requires the
 camera IP to be set in the integration options - see
 [docs/ptz.md](docs/ptz.md). For all available services

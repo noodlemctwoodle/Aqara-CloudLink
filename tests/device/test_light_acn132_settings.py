@@ -21,16 +21,16 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.build_descriptors import build_descriptors
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.build_descriptors import build_descriptors
+from custom_components.aqaralink.device.descriptors import (
     NumberDescriptor,
     TextDescriptor,
 )
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.number import AqaraNumber
-from custom_components.aqara_lanlink.text import AqaraText
-from custom_components.aqara_lanlink.entity import build_descriptor_entities
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.number import AqaraNumber
+from custom_components.aqaralink.text import AqaraText
+from custom_components.aqaralink.entity import build_descriptor_entities
 
 from ..platforms.conftest import make_device, make_hub, make_subentry
 

@@ -5,13 +5,13 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.entity import EntityCategory
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, door_lock, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor, SensorDescriptor, SwitchDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:

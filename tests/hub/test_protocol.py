@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.protocol import (
+from custom_components.aqaralink.hub.protocol import (
     G400_MODEL,
     LANEntity,
     LANReport,

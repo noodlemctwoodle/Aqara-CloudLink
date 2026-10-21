@@ -1,6 +1,6 @@
 # Per-model trait overrides
 
-The catalogue shipped with `aqara_lanlink` is generated from Aqara's V3 cloud
+The catalogue shipped with `aqaralink` is generated from Aqara's V3 cloud
 spec, so it is occasionally wrong: a label leaks through untranslated, a
 trait is mis-typed, or the desired Home Assistant entity type differs from
 what the automatic classifier picks. Each device-model package can correct
@@ -16,11 +16,11 @@ for where overrides fit in the broader contribution flow.
 
 ## How it works
 
-Every model package under `custom_components/aqara_lanlink/device/models/<pkg>/`
+Every model package under `custom_components/aqaralink/device/models/<pkg>/`
 has an `overrides.py` exporting an `OVERRIDES` dict keyed by wire path:
 
 ```python
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 OVERRIDES: dict[str, TraitSpec | None] = {
     "5.160.33001": TraitSpec(...),   # replace the generated entry at this wire path
@@ -51,7 +51,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 # Rebuild the generated TraitSpecs for this package from the sibling data.json.
 # Reading the file directly avoids a circular import of the model loader.
@@ -81,7 +81,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 _raw = json.loads((Path(__file__).parent / "data.json").read_text())["traits"]
 _base = {wp: TraitSpec(id=wp, wire_path=wp, **fields) for wp, fields in _raw.items()}
@@ -154,7 +154,7 @@ live in their own map, parallel to `OVERRIDES`:
   `OVERRIDES` but **no wire-path coercion** (settings have no `wire_path`).
 
 ```python
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device.settings import SettingSpec
 
 SETTINGS_OVERRIDES: dict[str, SettingSpec | None] = {
     # replace the data.json entry at this rid

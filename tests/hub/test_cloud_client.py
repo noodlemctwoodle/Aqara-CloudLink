@@ -14,7 +14,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from custom_components.aqara_lanlink.hub.cloud_client import (
+from custom_components.aqaralink.hub.cloud_client import (
     AREAS,
     AqaraAuthError,
     AqaraCloudAuth,
@@ -74,7 +74,7 @@ class TestPasswordEncryption:
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
 
-        import custom_components.aqara_lanlink.hub.cloud_client as ca
+        import custom_components.aqaralink.hub.cloud_client as ca
         orig_pem = ca._AQARA_PUBLIC_KEY_PEM
         ca._AQARA_PUBLIC_KEY_PEM = pub_pem
         try:
@@ -382,7 +382,7 @@ class TestQueryDeviceTraits:
 
         with caplog.at_level(
             logging.INFO,
-            logger="custom_components.aqara_lanlink.hub.cloud_client",
+            logger="custom_components.aqaralink.hub.cloud_client",
         ):
             await client.query_device_traits(
                 token="tok-1", did="lumi.TESTZIG0000000C",
@@ -907,10 +907,10 @@ class TestEnrichLightEffects:
     @pytest.mark.asyncio
     async def test_replaces_descriptor_with_effects(self):
         """The helper fetches both action_ids and produces an enriched LightDescriptor."""
-        from custom_components.aqara_lanlink.device.attrs import AttrSpec
-        from custom_components.aqara_lanlink.device.descriptors import LightDescriptor
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.hub.cloud_client import (
+        from custom_components.aqaralink.device.attrs import AttrSpec
+        from custom_components.aqaralink.device.descriptors import LightDescriptor
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.hub.cloud_client import (
             AqaraCloudClient,
             enrich_light_effects,
         )
@@ -952,12 +952,12 @@ class TestEnrichLightEffects:
         """Cloud returns server error (code != 0): log warning, leave effects=()."""
         caplog.set_level(
             logging.WARNING,
-            logger="custom_components.aqara_lanlink.hub.cloud_client",
+            logger="custom_components.aqaralink.hub.cloud_client",
         )
-        from custom_components.aqara_lanlink.device.attrs import AttrSpec
-        from custom_components.aqara_lanlink.device.descriptors import LightDescriptor
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.hub.cloud_client import (
+        from custom_components.aqaralink.device.attrs import AttrSpec
+        from custom_components.aqaralink.device.descriptors import LightDescriptor
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.hub.cloud_client import (
             AqaraCloudClient,
             enrich_light_effects,
         )
@@ -991,12 +991,12 @@ class TestEnrichLightEffects:
         """Cloud unreachable (aiohttp.ClientError): log warning, leave effects=()."""
         caplog.set_level(
             logging.WARNING,
-            logger="custom_components.aqara_lanlink.hub.cloud_client",
+            logger="custom_components.aqaralink.hub.cloud_client",
         )
-        from custom_components.aqara_lanlink.device.attrs import AttrSpec
-        from custom_components.aqara_lanlink.device.descriptors import LightDescriptor
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.hub.cloud_client import (
+        from custom_components.aqaralink.device.attrs import AttrSpec
+        from custom_components.aqaralink.device.descriptors import LightDescriptor
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.hub.cloud_client import (
             AqaraCloudClient,
             enrich_light_effects,
         )
@@ -1027,9 +1027,9 @@ class TestEnrichLightEffects:
     @pytest.mark.asyncio
     async def test_skips_non_light_descriptors(self):
         """Non-LightDescriptor entries are left untouched and no cloud calls are made."""
-        from custom_components.aqara_lanlink.device.attrs import AttrSpec
-        from custom_components.aqara_lanlink.device.descriptors import SwitchDescriptor
-        from custom_components.aqara_lanlink.hub.cloud_client import (
+        from custom_components.aqaralink.device.attrs import AttrSpec
+        from custom_components.aqaralink.device.descriptors import SwitchDescriptor
+        from custom_components.aqaralink.hub.cloud_client import (
             AqaraCloudClient,
             enrich_light_effects,
         )

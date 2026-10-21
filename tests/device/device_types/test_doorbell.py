@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from homeassistant.components.event import EventDeviceClass
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, doorbell, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     EventDescriptor, NumberDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:
@@ -126,13 +126,13 @@ def test_every_doorbell_event_in_catalogue_supports_ring():
     entities that don't (removal in 2027.4)."""
     from pathlib import Path
 
-    from custom_components.aqara_lanlink.device.classify_v3 import classify_v3
-    from custom_components.aqara_lanlink.device.models._loader import load_model_data
-    from custom_components.aqara_lanlink.device.descriptors import EventDescriptor
+    from custom_components.aqaralink.device.classify_v3 import classify_v3
+    from custom_components.aqaralink.device.models._loader import load_model_data
+    from custom_components.aqaralink.device.descriptors import EventDescriptor
 
     models_root = (
         Path(__file__).resolve().parents[3]
-        / "custom_components" / "aqara_lanlink" / "device" / "models"
+        / "custom_components" / "aqaralink" / "device" / "models"
     )
     offenders = []
     for pkg in sorted(p for p in models_root.iterdir() if p.is_dir() and not p.name.startswith("_")):

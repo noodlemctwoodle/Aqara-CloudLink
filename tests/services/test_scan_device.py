@@ -1,4 +1,4 @@
-"""Tests for aqara_lanlink.scan_device."""
+"""Tests for aqaralink.scan_device."""
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant.helpers import device_registry as dr
 
-from custom_components.aqara_lanlink.const import DOMAIN
-from custom_components.aqara_lanlink.device.overlay import Overlay
+from custom_components.aqaralink.const import DOMAIN
+from custom_components.aqaralink.device.overlay import Overlay
 
 
 def _build_test_entry(hass, *, model: str, did: str = "lumi1.test"):
@@ -46,7 +46,7 @@ def _build_test_entry(hass, *, model: str, did: str = "lumi1.test"):
 
 
 def _build_panel(*, paths):
-    from custom_components.aqara_lanlink.hub.cloud_client import EndpointPanel
+    from custom_components.aqaralink.hub.cloud_client import EndpointPanel
     return EndpointPanel(
         endpoint_id=4, endpoint_name="Test", endpoint_icon_id="",
         device_name="Test", device_types="", position_name="", model_type=2,
@@ -68,7 +68,7 @@ async def test_scan_device_creates_repair_issue_when_gaps_exist(hass):
     """A device with cloud-visible traits not in catalogue/overlay
     produces a Repair issue carrying the gap report.
     """
-    from custom_components.aqara_lanlink.services.scan_device import async_handle_scan
+    from custom_components.aqaralink.services.scan_device import async_handle_scan
 
     entry = _build_test_entry(hass, model="lumi.test")
     entry.runtime_data.cloud_client.query_collection_panels = AsyncMock(
@@ -102,10 +102,10 @@ async def test_scan_device_creates_no_issue_when_catalogue_already_covers_all(
     that pushes the same wire_path. The shipped V1 catalogue has no
     wire_paths set; full V3 regen lands in Chunk 6.
     """
-    from custom_components.aqara_lanlink.services.scan_device import async_handle_scan
+    from custom_components.aqaralink.services.scan_device import async_handle_scan
     from homeassistant.helpers import issue_registry as ir
-    from custom_components.aqara_lanlink.device import registry
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device import registry
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     model = "lumi.vibration.agl002"
     wp = "2.160.33000"
@@ -152,10 +152,10 @@ async def test_scan_device_posts_rid_discovery_notification(hass, monkeypatch):
     return a propertyId-bearing trait list so the merged RESOURCE_IDS map
     carries the pairs.
     """
-    import custom_components.aqara_lanlink.services.scan_device as scan_mod
-    from custom_components.aqara_lanlink.services.scan_device import async_handle_scan
-    from custom_components.aqara_lanlink.device import registry
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    import custom_components.aqaralink.services.scan_device as scan_mod
+    from custom_components.aqaralink.services.scan_device import async_handle_scan
+    from custom_components.aqaralink.device import registry
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     model = "lumi.ridtest.a"
     entry = _build_test_entry(hass, model=model)
@@ -212,7 +212,7 @@ async def test_scan_device_posts_rid_discovery_notification(hass, monkeypatch):
     assert cat_wp in body  # the catalogue wire_path (path-union enrichment)
     assert "9.1.85" in body  # the catalogue rid
     assert captured["title"] == f"Aqara LAN Link RID discovery: {model}"
-    assert captured["notification_id"].startswith("aqara_lanlink_rid_discovery_")
+    assert captured["notification_id"].startswith("aqaralink_rid_discovery_")
 
 
 async def test_scan_device_rid_discovery_failure_does_not_block_gap_issue(
@@ -221,8 +221,8 @@ async def test_scan_device_rid_discovery_failure_does_not_block_gap_issue(
     """If the rid-discovery step raises, the trait-gap Repair issue is still
     created (the step is additive and best-effort).
     """
-    import custom_components.aqara_lanlink.services.scan_device as scan_mod
-    from custom_components.aqara_lanlink.services.scan_device import async_handle_scan
+    import custom_components.aqaralink.services.scan_device as scan_mod
+    from custom_components.aqaralink.services.scan_device import async_handle_scan
     from homeassistant.helpers import issue_registry as ir
 
     entry = _build_test_entry(hass, model="lumi.test")
@@ -254,7 +254,7 @@ async def test_scan_device_handles_cloud_failure_with_repair_issue(hass):
     """When query_collection_panels raises, a Repair issue describing
     the failure is created (rather than a silent error).
     """
-    from custom_components.aqara_lanlink.services.scan_device import async_handle_scan
+    from custom_components.aqaralink.services.scan_device import async_handle_scan
     from homeassistant.helpers import issue_registry as ir
 
     entry = _build_test_entry(hass, model="lumi.test")

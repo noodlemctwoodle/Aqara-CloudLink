@@ -72,7 +72,7 @@ Created when `presets` is in the camera's sub-features:
 
 ### Service
 
-A single service, `aqara_lanlink.ptz`, performs every PTZ action. It targets a
+A single service, `aqaralink.ptz`, performs every PTZ action. It targets a
 camera entity (`domain: camera`) and only works on PTZ-capable cameras; calling
 it on a non-PTZ camera raises an error. The `command` field selects the action;
 `value`, `continuous`, and `duration` refine it.
@@ -97,7 +97,7 @@ Command reference:
 Example - continuous tilt down for 2 seconds:
 
 ```yaml
-service: aqara_lanlink.ptz
+service: aqaralink.ptz
 target:
   entity_id: camera.hallway_camera
 data:
@@ -109,7 +109,7 @@ data:
 Example - recall a saved preset:
 
 ```yaml
-service: aqara_lanlink.ptz
+service: aqaralink.ptz
 target:
   entity_id: camera.hallway_camera
 data:
@@ -127,7 +127,7 @@ drive PTZ from its on-image overlay. The card's PTZ feature allows exactly one
 type: custom:webrtc-camera
 url: hallway_camera          # the go2rtc stream name
 ptz:
-  service: aqara_lanlink.ptz
+  service: aqaralink.ptz
   data_left:     {entity_id: camera.hallway_camera, command: left}
   data_right:    {entity_id: camera.hallway_camera, command: right}
   data_up:       {entity_id: camera.hallway_camera, command: up}

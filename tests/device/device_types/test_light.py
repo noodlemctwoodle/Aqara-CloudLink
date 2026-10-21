@@ -1,11 +1,11 @@
 """Tests for the Light composite composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, light, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import LightDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.descriptors import LightDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx() -> _base.ComposeContext:

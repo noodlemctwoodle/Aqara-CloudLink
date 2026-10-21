@@ -8,11 +8,11 @@ import types
 
 import pytest
 
-from custom_components.aqara_lanlink.device import registry
-from custom_components.aqara_lanlink.device.base import Device
+from custom_components.aqaralink.device import registry
+from custom_components.aqaralink.device.base import Device
 
 
-_SYNTH_PREFIX = "custom_components.aqara_lanlink.device.models.synth_"
+_SYNTH_PREFIX = "custom_components.aqaralink.device.models.synth_"
 
 
 @pytest.fixture(autouse=True)
@@ -115,9 +115,9 @@ def test_known_models_returns_sorted_list():
 
 def test_auto_discovery_imports_fake_model_module(monkeypatch, tmp_path):
     # Create a temporary fake package under sys.modules that masquerades
-    # as `custom_components.aqara_lanlink.device.models` and contains a
+    # as `custom_components.aqaralink.device.models` and contains a
     # single submodule that registers a synthetic device class.
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     submod_name = f"{pkg_name}.test_fake_model"
 
     fake_pkg = types.ModuleType(pkg_name)
@@ -127,8 +127,8 @@ def test_auto_discovery_imports_fake_model_module(monkeypatch, tmp_path):
     submodule_path = tmp_path / "test_fake_model.py"
     submodule_path.write_text(textwrap.dedent(
         """
-        from custom_components.aqara_lanlink.device import registry
-        from custom_components.aqara_lanlink.device.base import Device
+        from custom_components.aqaralink.device import registry
+        from custom_components.aqaralink.device.base import Device
 
         @registry.register_device("test.model.fake")
         class FakeDevice(Device):
@@ -145,7 +145,7 @@ def test_auto_discovery_imports_fake_model_module(monkeypatch, tmp_path):
 
 
 def test_auto_discovery_runs_only_once(monkeypatch, tmp_path):
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     fake_pkg = types.ModuleType(pkg_name)
     fake_pkg.__path__ = [str(tmp_path)]  # type: ignore[attr-defined]
 
@@ -158,8 +158,8 @@ def test_auto_discovery_runs_only_once(monkeypatch, tmp_path):
         counter = int(os.environ.get('AQARA_TEST_COUNTER', '0')) + 1
         os.environ['AQARA_TEST_COUNTER'] = str(counter)
 
-        from custom_components.aqara_lanlink.device import registry
-        from custom_components.aqara_lanlink.device.base import Device
+        from custom_components.aqaralink.device import registry
+        from custom_components.aqaralink.device.base import Device
 
         @registry.register_device("test.model.counted")
         class CountedDevice(Device):
@@ -180,7 +180,7 @@ def test_auto_discovery_runs_only_once(monkeypatch, tmp_path):
 
 
 def test_auto_discovery_tolerates_broken_module(monkeypatch, tmp_path, caplog):
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     fake_pkg = types.ModuleType(pkg_name)
     fake_pkg.__path__ = [str(tmp_path)]  # type: ignore[attr-defined]
 
@@ -190,8 +190,8 @@ def test_auto_discovery_tolerates_broken_module(monkeypatch, tmp_path, caplog):
     )
     (tmp_path / "test_healthy_model.py").write_text(textwrap.dedent(
         """
-        from custom_components.aqara_lanlink.device import registry
-        from custom_components.aqara_lanlink.device.base import Device
+        from custom_components.aqaralink.device import registry
+        from custom_components.aqaralink.device.base import Device
 
         @registry.register_device("test.model.healthy")
         class HealthyDevice(Device):
@@ -208,7 +208,7 @@ def test_auto_discovery_tolerates_broken_module(monkeypatch, tmp_path, caplog):
 
 def test_auto_discovery_handles_missing_models_package(monkeypatch):
     # Stub out the models package so importlib raises ImportError.
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     # Force ImportError by patching importlib.import_module within the
     # registry module to raise for the models package only.
     import importlib
@@ -221,7 +221,7 @@ def test_auto_discovery_handles_missing_models_package(monkeypatch):
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.registry.importlib.import_module",
+        "custom_components.aqaralink.device.registry.importlib.import_module",
         _raising_import,
     )
     # No raise; just an empty registry.
@@ -256,7 +256,7 @@ def _synth_package(
     assert subpkg_name.startswith("synth_"), (
         f"_synth_package: subpkg_name must start with 'synth_', got {subpkg_name!r}"
     )
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     path_str = str(tmp_path)
 
     existing = sys.modules.get(pkg_name)
@@ -292,7 +292,7 @@ def _synth_package(
 def test_validation_traits_without_models(monkeypatch, tmp_path):
     """TRAITS declared without MODELS raises RuntimeError."""
     _synth_package(monkeypatch, tmp_path, "synth_no_models", """
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         TRAITS = {
             "1.7.85": TraitSpec(id="1.7.85", name="motion"),
         }
@@ -351,8 +351,8 @@ def test_validation_duplicate_model_across_packages(monkeypatch, tmp_path):
 def test_validation_override_class_for_unregistered_model(monkeypatch, tmp_path):
     """Override class registered for a model not in MODELS raises RuntimeError."""
     _synth_package(monkeypatch, tmp_path, "synth_bad_override", """
-        from custom_components.aqara_lanlink.device.registry import register_device
-        from custom_components.aqara_lanlink.device.base import Device
+        from custom_components.aqaralink.device.registry import register_device
+        from custom_components.aqaralink.device.base import Device
 
         MODELS = ("lumi.test.declared",)
         MANUFACTURER = "Aqara"
@@ -394,10 +394,10 @@ def test_validation_empty_package(monkeypatch, tmp_path):
 
 def test_reset_for_tests_clears_all_indices(monkeypatch, tmp_path):
     """reset_for_tests clears _TRAIT_INDEX and _DISPLAY_INDEX."""
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     _synth_package(monkeypatch, tmp_path, "synth_for_reset", """
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         MODELS = ("lumi.test.reset",)
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Reset Test"
@@ -422,10 +422,10 @@ def test_reset_for_tests_clears_all_indices(monkeypatch, tmp_path):
 
 def test_valid_package_populates_indices(monkeypatch, tmp_path):
     """A valid package with TRAITS and WHITELABELS populates all indices."""
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     _synth_package(monkeypatch, tmp_path, "synth_full_pkg", """
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         MODELS = ("lumi.test.primary", "lumi.test.variant")
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Full Test Device"
@@ -512,7 +512,7 @@ def test_retry_after_validation_failure_no_stale_index(monkeypatch, tmp_path):
     # Remove the invalid subpackage from sys.modules and from the filesystem
     # so the second discovery pass does not find it.
     bad_mod_name = (
-        "custom_components.aqara_lanlink.device.models.synth_retry_bad"
+        "custom_components.aqaralink.device.models.synth_retry_bad"
     )
     sys.modules.pop(bad_mod_name, None)
     import shutil
@@ -533,7 +533,7 @@ def test_retry_after_validation_failure_no_stale_index(monkeypatch, tmp_path):
 def test_known_paths_indexed_on_discovery(monkeypatch, tmp_path):
     """wire_path lands on the per-trait TraitSpec entry in _TRAIT_INDEX."""
     _synth_package(monkeypatch, tmp_path, "synth_kp_a", """
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         MODELS = ("lumi.fake.kp",)
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Fake KP"
@@ -551,7 +551,7 @@ def test_known_paths_indexed_on_discovery(monkeypatch, tmp_path):
 def test_known_paths_multi_model_fans_out(monkeypatch, tmp_path):
     """Multi-model packages share the TraitSpec.wire_path value per model."""
     _synth_package(monkeypatch, tmp_path, "synth_kp_multi", """
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         MODELS = ("lumi.a", "lumi.b")
         MANUFACTURER = "Aqara"
         DISPLAY_NAME = "Multi"
@@ -592,7 +592,7 @@ def test_candidate_traits_malformed_does_not_raise(monkeypatch, tmp_path):
 
 def test_path_and_enum_label_indexes_removed():
     """v3d-1: _PATH_INDEX and _ENUM_LABEL_INDEX no longer exist."""
-    from custom_components.aqara_lanlink.device import registry
+    from custom_components.aqaralink.device import registry
 
     assert not hasattr(registry, "_PATH_INDEX")
     assert not hasattr(registry, "_ENUM_LABEL_INDEX")
@@ -606,7 +606,7 @@ def test_fake_known_paths_silently_ignored(monkeypatch, tmp_path):
     """
     import sys
     import types
-    from custom_components.aqara_lanlink.device import registry, traits
+    from custom_components.aqaralink.device import registry, traits
 
     registry.reset_for_tests()
     fake = types.ModuleType("fake_pkg")
@@ -632,11 +632,11 @@ def test_no_model_package_emits_candidate_traits():
     """
     import pkgutil
 
-    from custom_components.aqara_lanlink.device import models as models_pkg
+    from custom_components.aqaralink.device import models as models_pkg
 
     for module_info in pkgutil.iter_modules(models_pkg.__path__):
         mod = __import__(
-            f"custom_components.aqara_lanlink.device.models.{module_info.name}",
+            f"custom_components.aqaralink.device.models.{module_info.name}",
             fromlist=["__name__"],
         )
         assert not hasattr(mod, "CANDIDATE_TRAITS"), (

@@ -7,10 +7,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import SensorDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.sensor import AqaraSensor, async_setup_entry
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import SensorDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.sensor import AqaraSensor, async_setup_entry
 
 from .conftest import make_device, make_hub, make_subentry
 
@@ -141,7 +141,7 @@ def test_apply_value_enum_sensor_renders_label_not_wire_value():
     """A read-only enum trait built via the auto-derive pipeline must
     display its label. Regression: Cube "Top face" showed "2" instead of
     "Face 3 Up" because the sensor descriptor dropped enum_values."""
-    from custom_components.aqara_lanlink.device.device_types._build import build_descriptor
+    from custom_components.aqaralink.device.device_types._build import build_descriptor
 
     spec = TraitSpec(
         id="2.163.20165", wire_path="2.163.20165", name="Top face",

@@ -7,15 +7,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.camera import bridge as bridge_module
-from custom_components.aqara_lanlink.device.camera.bridge import BridgeSession
-from custom_components.aqara_lanlink.device.camera.const import (
+from custom_components.aqaralink.device.camera import bridge as bridge_module
+from custom_components.aqaralink.device.camera.bridge import BridgeSession
+from custom_components.aqaralink.device.camera.const import (
     AUDIO_PORT,
     CONTROL_PORT,
     TYPE_ACK,
     TYPE_START_VOICE,
 )
-from custom_components.aqara_lanlink.device.camera.protocol import build_packet
+from custom_components.aqaralink.device.camera.protocol import build_packet
 
 _BRIDGE_PATH = bridge_module.__file__
 
@@ -24,7 +24,7 @@ class TestBridgeSession:
     def _make_ack(self, code: int = 0) -> bytes:
         return build_packet(TYPE_ACK, code)
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_connect_sends_start_voice(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -39,7 +39,7 @@ class TestBridgeSession:
         assert sent[2] == TYPE_START_VOICE
         session.close()
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_connect_fails_on_rejected_ack(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -50,7 +50,7 @@ class TestBridgeSession:
         result = session.connect()
         assert result is False
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_connect_fails_on_timeout(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -61,7 +61,7 @@ class TestBridgeSession:
         result = session.connect()
         assert result is False
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_send_audio_sends_rtp_to_udp(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -77,7 +77,7 @@ class TestBridgeSession:
         assert len(data) == 12 + 22  # RTP header + frame
         session.close()
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_seq_num_increments(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -97,7 +97,7 @@ class TestBridgeSession:
         assert seq2 == seq1 + 1
         session.close()
 
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_close_sends_stop_voice(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -114,7 +114,7 @@ class TestBridgeSession:
 
 
 class TestBridgeFlow:
-    @patch("custom_components.aqara_lanlink.device.camera.bridge.socket.socket")
+    @patch("custom_components.aqaralink.device.camera.bridge.socket.socket")
     def test_full_connect_send_close_flow(self, mock_socket_cls):
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
@@ -137,7 +137,7 @@ class TestBridgeFlow:
 class TestBridgeSigterm:
     def test_bridge_module_imports_signal(self):
         """Verify the bridge module imports signal for SIGTERM handling."""
-        import custom_components.aqara_lanlink.device.camera.bridge as bridge_mod
+        import custom_components.aqaralink.device.camera.bridge as bridge_mod
         assert hasattr(bridge_mod, "signal")
         assert bridge_mod.signal is signal
 
@@ -149,7 +149,7 @@ class TestBridgeSigterm:
         mock_tcp = MagicMock()
         mock_udp = MagicMock()
         with patch(
-            "custom_components.aqara_lanlink.device.camera.bridge.socket.socket"
+            "custom_components.aqaralink.device.camera.bridge.socket.socket"
         ) as mock_cls:
             mock_cls.side_effect = [mock_tcp, mock_udp]
             mock_tcp.recv.return_value = build_packet(TYPE_ACK, 0)
@@ -185,7 +185,7 @@ class TestBridgeStandaloneLaunch:
     def test_runs_as_standalone_script(self):
         """bridge.py must reach main() when run directly, not crash on import.
 
-        Regression: bridge.py imported `custom_components.aqara_lanlink`, which
+        Regression: bridge.py imported `custom_components.aqaralink`, which
         -- with the script directory on sys.path[0] -- let the stdlib-named
         `numbers.py` sibling shadow the real `numbers` module and abort the
         import with a circular-import ImportError.

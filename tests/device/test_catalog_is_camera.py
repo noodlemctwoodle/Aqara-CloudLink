@@ -1,7 +1,7 @@
 """Regression guard: is_camera_model uses the V3 deviceTypes index, not Device subclasses."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device import catalog
+from custom_components.aqaralink.device import catalog
 
 
 def test_is_camera_model_true_for_real_camera_model():

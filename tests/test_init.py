@@ -19,14 +19,14 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from custom_components.aqara_lanlink import (
+from custom_components.aqaralink import (
     AqaraLanLinkRuntimeData,
     _cloud_poll_rids,
     _poll_cloud_traits,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink.const import (
     CLOUD_POLL_INTERVAL_SECONDS,
     CONF_AQARA_REGION,
     CONF_AQARA_TOKEN,
@@ -39,9 +39,9 @@ from custom_components.aqara_lanlink.const import (
     DOMAIN,
     PLATFORMS,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.hub.cloud_client import AqaraCloudAuthError
-from custom_components.aqara_lanlink.hub.rearm import RearmManager
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.hub.cloud_client import AqaraCloudAuthError
+from custom_components.aqaralink.hub.rearm import RearmManager
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import dt as dt_util
@@ -52,8 +52,8 @@ from homeassistant.util import dt as dt_util
 # -----------------------------------------------------------------------------
 
 
-def test_domain_is_aqara_lanlink() -> None:
-    assert DOMAIN == "aqara_lanlink"
+def test_domain_is_aqaralink() -> None:
+    assert DOMAIN == "aqaralink"
 
 
 def test_platforms_include_all_expected() -> None:
@@ -109,7 +109,7 @@ def _device(subentry_mapping):
 
 
 async def test_remove_subdevice_deletes_subentry_and_reloads():
-    from custom_components.aqara_lanlink import async_remove_config_entry_device
+    from custom_components.aqaralink import async_remove_config_entry_device
 
     hass, entry, (removed, reloaded) = _remove_hook_env(subentries=("sub1",))
     device = _device({"E1": {"sub1"}})
@@ -120,7 +120,7 @@ async def test_remove_subdevice_deletes_subentry_and_reloads():
 
 
 async def test_remove_hub_device_is_refused():
-    from custom_components.aqara_lanlink import async_remove_config_entry_device
+    from custom_components.aqaralink import async_remove_config_entry_device
 
     hass, entry, (removed, reloaded) = _remove_hook_env()
     # The hub / self-device is tied to the entry directly (subentry id None).
@@ -132,7 +132,7 @@ async def test_remove_hub_device_is_refused():
 
 
 async def test_remove_stale_device_is_allowed_without_subentry_removal():
-    from custom_components.aqara_lanlink import async_remove_config_entry_device
+    from custom_components.aqaralink import async_remove_config_entry_device
 
     hass, entry, (removed, reloaded) = _remove_hook_env(subentries=("sub1",))
     # Device references a subentry that no longer exists on the entry.
@@ -144,7 +144,7 @@ async def test_remove_stale_device_is_allowed_without_subentry_removal():
 
 
 async def test_remove_device_not_linked_to_entry_is_allowed():
-    from custom_components.aqara_lanlink import async_remove_config_entry_device
+    from custom_components.aqaralink import async_remove_config_entry_device
 
     hass, entry, (removed, reloaded) = _remove_hook_env()
     device = _device({})  # no association with this config entry at all
@@ -230,7 +230,7 @@ def patch_clientsession():
     pycares resolver thread, which trips the test plugin's lingering-thread
     teardown check)."""
     with patch(
-        "custom_components.aqara_lanlink.async_get_clientsession",
+        "custom_components.aqaralink.async_get_clientsession",
         return_value=MagicMock(),
     ) as p:
         yield p
@@ -255,9 +255,9 @@ async def test_async_setup_entry_basic(hass, patch_clientsession) -> None:
     coord = _make_coordinator_mock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -295,9 +295,9 @@ async def test_setup_evaluates_current_topology_for_rearm(hass, patch_clientsess
     coord.lanlink_topology_dids = frozenset({"lumi1.HUB"})
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=MagicMock(),
+        "custom_components.aqaralink.AqaraCloudClient", return_value=MagicMock(),
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -317,7 +317,7 @@ async def test_setup_entry_hub_unreachable_raises_config_entry_not_ready(hass, p
     coord.wait_connected.side_effect = asyncio.TimeoutError()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ):
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, entry)
@@ -331,7 +331,7 @@ async def test_setup_entry_hub_unreachable_raises_config_entry_not_ready(hass, p
 @pytest.mark.asyncio
 async def test_setup_entry_picks_override_class_over_auto_derived(hass, patch_clientsession) -> None:
     """A registered Device subclass for a model is preferred over AutoDerivedDevice."""
-    from custom_components.aqara_lanlink.device.base import Device
+    from custom_components.aqaralink.device.base import Device
 
     entry = _hub_entry(hass)
     sub = _make_subentry(
@@ -357,12 +357,12 @@ async def test_setup_entry_picks_override_class_over_auto_derived(hass, patch_cl
     subentry_model = "lumi.override.x"
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch(
-        "custom_components.aqara_lanlink.registry.get_device_class",
+        "custom_components.aqaralink.registry.get_device_class",
         side_effect=lambda m: _Override if m == subentry_model else None,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -385,9 +385,9 @@ async def test_setup_entry_assigns_cloud_client_and_token_to_coordinator(hass, p
     cloud = MagicMock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -413,9 +413,9 @@ async def test_setup_entry_persists_and_uses_stable_phone_id(hass, patch_clients
     coord = _make_coordinator_mock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=MagicMock(),
+        "custom_components.aqaralink.AqaraCloudClient", return_value=MagicMock(),
     ) as client_cls, patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -435,8 +435,8 @@ async def test_phone_id_derived_from_instance_id(hass) -> None:
 
     from homeassistant.helpers import instance_id as _iid
 
-    from custom_components.aqara_lanlink import _ensure_phone_id
-    from custom_components.aqara_lanlink.const import PHONE_ID_NAMESPACE
+    from custom_components.aqaralink import _ensure_phone_id
+    from custom_components.aqaralink.const import PHONE_ID_NAMESPACE
 
     entry = _hub_entry(hass)
     install = await _iid.async_get(hass)
@@ -452,7 +452,7 @@ async def test_phone_id_shared_across_entries_and_stable_across_readd(hass) -> N
     """One install -> one PhoneId: identical across two hub entries, and a
     re-add (fresh entry, no stored PhoneId) yields the same value because the
     HA install id is durable."""
-    from custom_components.aqara_lanlink import _ensure_phone_id
+    from custom_components.aqaralink import _ensure_phone_id
 
     entry_a = _hub_entry(hass)
     entry_b = _hub_entry(hass)
@@ -470,7 +470,7 @@ async def test_phone_id_shared_across_entries_and_stable_across_readd(hass) -> N
 async def test_phone_id_overrides_stale_per_entry_value(hass) -> None:
     """A pre-existing per-entry random PhoneId (the old behaviour) is REPLACED by
     the instance-derived value -- the per-entry scope was the buildup vector."""
-    from custom_components.aqara_lanlink import _ensure_phone_id
+    from custom_components.aqaralink import _ensure_phone_id
 
     entry = _hub_entry(hass)
     hass.config_entries.async_update_entry(
@@ -490,9 +490,9 @@ async def test_async_unload_entry(hass, patch_clientsession) -> None:
     coord = _make_coordinator_mock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -522,8 +522,8 @@ def test_register_initial_read_machinery_deleted() -> None:
     """The legacy INITIAL_READ_ATTRS / register_initial_read /
     _fire_initial_reads triple are removed. Their absence is the contract.
     """
-    from custom_components.aqara_lanlink.device.base import Device
-    from custom_components.aqara_lanlink.hub.coordinator import HubCoordinator
+    from custom_components.aqaralink.device.base import Device
+    from custom_components.aqaralink.hub.coordinator import HubCoordinator
     assert not hasattr(Device, "INITIAL_READ_ATTRS")
     assert not hasattr(HubCoordinator, "register_initial_read")
     assert not hasattr(HubCoordinator, "_fire_initial_reads")
@@ -556,12 +556,12 @@ async def test_setup_entry_partial_failure_after_wait_connected_stops_coordinato
             raise RuntimeError("device setup blew up")
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch(
-        "custom_components.aqara_lanlink.registry.get_device_class",
+        "custom_components.aqaralink.registry.get_device_class",
         return_value=_BoomDevice,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -587,12 +587,12 @@ async def test_setup_entry_real_auto_derive_with_t2_light_fixture(hass, patch_cl
     import json
     from pathlib import Path
 
-    from custom_components.aqara_lanlink.device import (
+    from custom_components.aqaralink.device import (
         attrs as attrs_catalog,
         traits as traits_catalog,
     )
-    from custom_components.aqara_lanlink.device.base import AutoDerivedDevice
-    from custom_components.aqara_lanlink.device.descriptors import LightDescriptor
+    from custom_components.aqaralink.device.base import AutoDerivedDevice
+    from custom_components.aqaralink.device.descriptors import LightDescriptor
 
     # Reset the canonical trait catalog so auto-derive's pattern detector
     # can find the canonical light propertyIds (populated by lazy package discovery).
@@ -621,7 +621,7 @@ async def test_setup_entry_real_auto_derive_with_t2_light_fixture(hass, patch_cl
 
         coord = _make_coordinator_mock()
         fake_cloud = MagicMock()
-        from custom_components.aqara_lanlink.hub.cloud_client import EndpointPanel
+        from custom_components.aqaralink.hub.cloud_client import EndpointPanel
         fake_cloud.query_collection_panels = AsyncMock(
             return_value={2: EndpointPanel(
                 endpoint_id=2, endpoint_name="", endpoint_icon_id="",
@@ -633,15 +633,15 @@ async def test_setup_entry_real_auto_derive_with_t2_light_fixture(hass, patch_cl
         fake_cloud.query_device_traits = AsyncMock(return_value=traits_list)
 
         with patch(
-            "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+            "custom_components.aqaralink.HubCoordinator", return_value=coord,
         ), patch(
-            "custom_components.aqara_lanlink.AqaraCloudClient",
+            "custom_components.aqaralink.AqaraCloudClient",
             return_value=fake_cloud,
         ), patch(
-            "custom_components.aqara_lanlink.enrich_light_effects",
+            "custom_components.aqaralink.enrich_light_effects",
             new_callable=AsyncMock,
         ), patch(
-            "custom_components.aqara_lanlink.registry.get_device_class",
+            "custom_components.aqaralink.registry.get_device_class",
             return_value=None,
         ), patch.object(
             hass.config_entries, "async_forward_entry_setups",
@@ -678,8 +678,8 @@ async def test_register_candidate_paths_issue_carries_count_and_details(monkeypa
     user knows which paired device to scan -- distinguishing multiple
     devices of the same model is the whole point of the per-DID schema.
     """
-    from custom_components.aqara_lanlink import _register_candidate_paths_issue
-    from custom_components.aqara_lanlink.device.observed_path_cache import (
+    from custom_components.aqaralink import _register_candidate_paths_issue
+    from custom_components.aqaralink.device.observed_path_cache import (
         ObservedPathCache,
     )
 
@@ -694,7 +694,7 @@ async def test_register_candidate_paths_issue_carries_count_and_details(monkeypa
             pass
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         _FakeStore,
     )
     cache = ObservedPathCache(MagicMock())
@@ -713,14 +713,14 @@ async def test_register_candidate_paths_issue_carries_count_and_details(monkeypa
         captured.update(kwargs)
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.ir.async_create_issue", _capture,
+        "custom_components.aqaralink.ir.async_create_issue", _capture,
     )
 
     # device_registry lookup: stub to return a "Hallway vibration" entry
     # for VIB_A and nothing for the others (formatter falls back to DID).
     def _fake_get_device(*args, **kwargs):
         wanted = kwargs.get("identifiers") or set()
-        if ("aqara_lanlink", "lumi1.VIB_A") in wanted:
+        if ("aqaralink", "lumi1.VIB_A") in wanted:
             entry = MagicMock()
             entry.name_by_user = None
             entry.name = "Hallway vibration"
@@ -730,7 +730,7 @@ async def test_register_candidate_paths_issue_carries_count_and_details(monkeypa
     fake_reg = MagicMock()
     fake_reg.async_get_device = _fake_get_device
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.dr.async_get",
+        "custom_components.aqaralink.dr.async_get",
         lambda hass: fake_reg,
     )
 
@@ -775,9 +775,9 @@ async def test_options_update_triggers_entry_reload(hass, patch_clientsession) -
     coord = _make_coordinator_mock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -808,9 +808,9 @@ async def test_persisted_endpoint_updates_entry_data_without_reload(
     coord = _make_coordinator_mock()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ) as MockHC, patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=MagicMock(),
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -833,7 +833,7 @@ async def test_persisted_endpoint_updates_entry_data_without_reload(
 
 
 def test_topology_grew_detects_new_dids() -> None:
-    from custom_components.aqara_lanlink import _topology_grew
+    from custom_components.aqaralink import _topology_grew
 
     # New DID appears -> growth (the hub became ready / a device rejoined).
     assert _topology_grew(frozenset(), frozenset({"a"})) is True
@@ -860,9 +860,9 @@ async def test_topology_growth_rearms_subscription(hass, patch_clientsession) ->
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -900,9 +900,9 @@ async def test_session_up_rearms_subscription(hass, patch_clientsession) -> None
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -920,7 +920,7 @@ async def test_session_up_rearms_subscription(hass, patch_clientsession) -> None
 
 
 def test_push_appears_stalled_predicate() -> None:
-    from custom_components.aqara_lanlink import _push_appears_stalled
+    from custom_components.aqaralink import _push_appears_stalled
 
     # Connected + topology ready + nothing heard for > ttl -> stalled.
     assert _push_appears_stalled(
@@ -956,9 +956,9 @@ async def test_host_kind_classification_is_sticky(hass, patch_clientsession) -> 
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -979,7 +979,7 @@ async def test_concurrent_rearm_coalesces(hass, patch_clientsession) -> None:
     cloud calls."""
     import asyncio
 
-    from custom_components.aqara_lanlink import _rearm_subscriptions
+    from custom_components.aqaralink import _rearm_subscriptions
 
     entry = _hub_entry(hass)
     sub = _make_subentry(
@@ -992,9 +992,9 @@ async def test_concurrent_rearm_coalesces(hass, patch_clientsession) -> None:
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -1029,7 +1029,7 @@ async def test_concurrent_rearm_coalesces(hass, patch_clientsession) -> None:
 async def test_watchdog_rearms_when_pushes_stalled(hass, patch_clientsession) -> None:
     """A connected hub with a ready topology that has gone silent past the TTL
     gets its subscription re-armed by the watchdog tick."""
-    from custom_components.aqara_lanlink import _watchdog_tick
+    from custom_components.aqaralink import _watchdog_tick
 
     entry = _hub_entry(hass)
     sub = _make_subentry(
@@ -1046,9 +1046,9 @@ async def test_watchdog_rearms_when_pushes_stalled(hass, patch_clientsession) ->
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -1066,7 +1066,7 @@ async def test_persistent_stall_repair_lifecycle(
 ) -> None:
     """After repeated watchdog re-arms with no recovery, a Repair is raised;
     it clears once reports resume."""
-    from custom_components.aqara_lanlink import (
+    from custom_components.aqaralink import (
         PUSH_STALL_TTL_SECONDS,
         STALL_REARM_REPAIR_THRESHOLD,
         _watchdog_tick,
@@ -1087,9 +1087,9 @@ async def test_persistent_stall_repair_lifecycle(
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -1098,12 +1098,12 @@ async def test_persistent_stall_repair_lifecycle(
 
     clock = [1000.0]
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.monotonic", lambda: clock[0],
+        "custom_components.aqaralink.monotonic", lambda: clock[0],
     )
     with patch(
-        "custom_components.aqara_lanlink.ir.async_create_issue",
+        "custom_components.aqaralink.ir.async_create_issue",
     ) as mock_create, patch(
-        "custom_components.aqara_lanlink.ir.async_delete_issue",
+        "custom_components.aqaralink.ir.async_delete_issue",
     ) as mock_delete:
         for _ in range(STALL_REARM_REPAIR_THRESHOLD):
             clock[0] += PUSH_STALL_TTL_SECONDS + 1  # clear the re-arm cooldown
@@ -1126,7 +1126,7 @@ async def test_watchdog_stops_rearming_after_repair_threshold(
     still-wedged hub. Re-subscribing a wedged hub is proven useless (the hub's
     relay table is persistent; only a factory reset clears it), so further
     re-arms are pointless cloud load. It resumes only when reports recover."""
-    from custom_components.aqara_lanlink import (
+    from custom_components.aqaralink import (
         PUSH_STALL_TTL_SECONDS,
         STALL_REARM_REPAIR_THRESHOLD,
         _watchdog_tick,
@@ -1147,9 +1147,9 @@ async def test_watchdog_stops_rearming_after_repair_threshold(
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -1158,9 +1158,9 @@ async def test_watchdog_stops_rearming_after_repair_threshold(
 
     clock = [1000.0]
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.monotonic", lambda: clock[0],
+        "custom_components.aqaralink.monotonic", lambda: clock[0],
     )
-    with patch("custom_components.aqara_lanlink.ir.async_create_issue"):
+    with patch("custom_components.aqaralink.ir.async_create_issue"):
         # Re-arm up to the escalation threshold (one re-arm per cooldown).
         for _ in range(STALL_REARM_REPAIR_THRESHOLD):
             clock[0] += PUSH_STALL_TTL_SECONDS + 1
@@ -1176,7 +1176,7 @@ async def test_watchdog_stops_rearming_after_repair_threshold(
 
         # Reports recover -> stall cleared -> watchdog re-arms again next stall.
         coord.seconds_since_last_report = lambda: 5.0
-        with patch("custom_components.aqara_lanlink.ir.async_delete_issue"):
+        with patch("custom_components.aqaralink.ir.async_delete_issue"):
             await _watchdog_tick(hass, entry)  # not stalled: resets counter
         coord.seconds_since_last_report = lambda: 9999.0
         clock[0] += PUSH_STALL_TTL_SECONDS + 1
@@ -1188,7 +1188,7 @@ async def test_watchdog_stops_rearming_after_repair_threshold(
 @pytest.mark.asyncio
 async def test_watchdog_noop_when_healthy(hass, patch_clientsession) -> None:
     """A recently-heard hub is not re-armed by the watchdog."""
-    from custom_components.aqara_lanlink import _watchdog_tick
+    from custom_components.aqaralink import _watchdog_tick
 
     entry = _hub_entry(hass)
     sub = _make_subentry(
@@ -1205,9 +1205,9 @@ async def test_watchdog_noop_when_healthy(hass, patch_clientsession) -> None:
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
@@ -1253,9 +1253,9 @@ async def test_setup_subscribes_via_cloud_query_device_traits(
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1307,15 +1307,15 @@ async def test_subscribe_and_seed_skips_empty_string_values(
         seeded.append((path, value))
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
     ), patch(
-        "custom_components.aqara_lanlink.device.base.Device.seed_initial_value",
+        "custom_components.aqaralink.device.base.Device.seed_initial_value",
         side_effect=_capture_seed,
     ):
         await async_setup_entry(hass, entry)
@@ -1367,15 +1367,15 @@ async def test_setup_seeds_settings_from_cloud_by_rid(
         seeded.append((path, value))
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
     ), patch(
-        "custom_components.aqara_lanlink.device.base.Device.seed_initial_value",
+        "custom_components.aqaralink.device.base.Device.seed_initial_value",
         side_effect=_capture_seed,
     ):
         result = await async_setup_entry(hass, entry)
@@ -1435,9 +1435,9 @@ async def test_setup_skips_settings_seed_when_no_cloud_token(
     )
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1471,9 +1471,9 @@ async def test_setup_settings_seed_cloud_error_does_not_block_setup(
     )
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1510,9 +1510,9 @@ async def test_setup_no_settings_makes_no_rid_cloud_call(
     fake_cloud.query_resources_by_rid = AsyncMock(return_value={})
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1531,10 +1531,10 @@ def test_dead_modules_are_deleted():
     """
     import importlib
     for name in (
-        "custom_components.aqara_lanlink.device.path_cache",
-        "custom_components.aqara_lanlink.device.learned_cluster_cache",
-        "custom_components.aqara_lanlink.device.path_predictor",
-        "custom_components.aqara_lanlink.device.catalog_cache",
+        "custom_components.aqaralink.device.path_cache",
+        "custom_components.aqaralink.device.learned_cluster_cache",
+        "custom_components.aqaralink.device.path_predictor",
+        "custom_components.aqaralink.device.catalog_cache",
     ):
         try:
             importlib.import_module(name)
@@ -1545,7 +1545,7 @@ def test_dead_modules_are_deleted():
 
 async def test_setup_does_not_open_traits_storage_file(hass, monkeypatch):
     """Setup completes without instantiating the legacy
-    aqara_lanlink_traits Store (BY_ID persistence is gone).
+    aqaralink_traits Store (BY_ID persistence is gone).
     """
     from homeassistant.helpers import storage as ha_storage
 
@@ -1564,7 +1564,7 @@ async def test_setup_does_not_open_traits_storage_file(hass, monkeypatch):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "aqara_lanlink_traits" not in opened_keys
+    assert "aqaralink_traits" not in opened_keys
 
 
 
@@ -1607,11 +1607,11 @@ async def test_setup_builds_and_seeds_composite_controllers(
     cloud.query_resources_by_rid = AsyncMock(return_value={rid: str(wire)})
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=cloud,
     ), patch(
-        "custom_components.aqara_lanlink.device_catalog.composites_for_model",
+        "custom_components.aqaralink.device_catalog.composites_for_model",
         side_effect=_composites_for,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1623,7 +1623,7 @@ async def test_setup_builds_and_seeds_composite_controllers(
     controllers = entry.runtime_data.composite_controllers
     key = ("lumi1.COMP", rid)
     assert key in controllers
-    from custom_components.aqara_lanlink.device.composites.controller import (
+    from custom_components.aqaralink.device.composites.controller import (
         CompositeController,
     )
     controller = controllers[key]
@@ -1659,11 +1659,11 @@ async def test_setup_skips_composite_with_unknown_codec(
     cloud.query_resources_by_rid = AsyncMock(return_value={})
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=cloud,
     ), patch(
-        "custom_components.aqara_lanlink.device_catalog.composites_for_model",
+        "custom_components.aqaralink.device_catalog.composites_for_model",
         side_effect=_composites_for,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1898,15 +1898,15 @@ async def test_setup_seeds_cloud_poll_traits_and_keeps_them_out_of_trait_subscri
         seeded.append((path, value))
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
     ), patch(
-        "custom_components.aqara_lanlink.device.base.Device.seed_initial_value",
+        "custom_components.aqaralink.device.base.Device.seed_initial_value",
         side_effect=_capture_seed,
     ):
         result = await async_setup_entry(hass, entry)
@@ -1957,9 +1957,9 @@ async def test_setup_skips_cloud_poll_without_cloud_token(
     )
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -1992,15 +1992,15 @@ async def test_cloud_poll_interval_refreshes_values_through_handle_report(
         reports.append(dict(report.values))
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient",
+        "custom_components.aqaralink.AqaraCloudClient",
         return_value=fake_cloud,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
         new=AsyncMock(return_value=True),
     ), patch(
-        "custom_components.aqara_lanlink.device.base.Device.handle_report",
+        "custom_components.aqaralink.device.base.Device.handle_report",
         side_effect=_capture_report,
     ):
         assert await async_setup_entry(hass, entry) is True

@@ -14,23 +14,23 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.button import AqaraButton
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.build_descriptors import build_descriptors
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.button import AqaraButton
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.build_descriptors import build_descriptors
+from custom_components.aqaralink.device.descriptors import (
     ButtonDescriptor,
     NumberDescriptor,
     SelectDescriptor,
     SwitchDescriptor,
 )
-from custom_components.aqara_lanlink.device.models.plug_aeu002.overrides import (
+from custom_components.aqaralink.device.models.plug_aeu002.overrides import (
     SETTINGS_OVERRIDES,
 )
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.entity import build_descriptor_entities
-from custom_components.aqara_lanlink.number import AqaraNumber
-from custom_components.aqara_lanlink.select import AqaraSelect
-from custom_components.aqara_lanlink.switch import AqaraSwitch
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.entity import build_descriptor_entities
+from custom_components.aqaralink.number import AqaraNumber
+from custom_components.aqaralink.select import AqaraSelect
+from custom_components.aqaralink.switch import AqaraSwitch
 
 from ..platforms.conftest import make_device, make_hub, make_subentry
 

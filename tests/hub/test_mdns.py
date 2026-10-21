@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.hub import mdns
-from custom_components.aqara_lanlink.hub.mdns import (
+from custom_components.aqaralink.hub import mdns
+from custom_components.aqaralink.hub.mdns import (
     AqaraServiceRecord,
     discover_hub_by_did,
     discover_hubs,

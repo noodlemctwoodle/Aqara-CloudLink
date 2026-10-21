@@ -12,10 +12,10 @@ import types
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.models import _loader
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.models import _loader
 
-_SYNTH_PREFIX = "custom_components.aqara_lanlink.device.models.synth_"
+_SYNTH_PREFIX = "custom_components.aqaralink.device.models.synth_"
 
 # load_model_data direct-subscripts several required keys; the fixture must
 # include them or it KeyErrors before reaching the dropped_rids branch.
@@ -66,7 +66,7 @@ def _reset_registry():
 
 
 def _synth_package(monkeypatch, tmp_path, subpkg_name: str, init_src: str) -> None:
-    pkg_name = "custom_components.aqara_lanlink.device.models"
+    pkg_name = "custom_components.aqaralink.device.models"
     path_str = str(tmp_path)
     existing = sys.modules.get(pkg_name)
     if existing is not None and getattr(existing, "_synth_test_pkg", False):

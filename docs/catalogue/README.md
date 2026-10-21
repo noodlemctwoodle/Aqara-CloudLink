@@ -1,7 +1,7 @@
 # Catalogue reference library
 
 This directory documents the Aqara device catalogue shipped with the
-`aqara_lanlink` integration.
+`aqaralink` integration.
 
 - `index.md` - one row per device model with three trait counts:
   Authored (HA entities, enabled-by-default plus press-to-trigger

@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.diagnostics import (
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.diagnostics import (
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
 )
@@ -108,14 +108,14 @@ async def test_config_entry_diagnostics_redacts_topology_dids(hass):
 
 
 def test_to_redact_covers_credential_keys():
-    from custom_components.aqara_lanlink.const import (
+    from custom_components.aqaralink.const import (
         CONF_AQARA_ACCOUNT,
         CONF_AQARA_PASSWORD,
         CONF_AQARA_TOKEN,
         CONF_AQARA_USER_ID,
         CONF_PHONE_ID,
     )
-    from custom_components.aqara_lanlink.diagnostics import TO_REDACT
+    from custom_components.aqaralink.diagnostics import TO_REDACT
 
     required = {
         CONF_AQARA_TOKEN,
@@ -132,6 +132,6 @@ def test_to_redact_covers_credential_keys():
 async def test_diagnostics_does_not_import_learned_path_cache():
     """The diagnostics module must not import path_cache or
     LearnedPathCache (deleted in Task 10)."""
-    import custom_components.aqara_lanlink.diagnostics as diag_mod
+    import custom_components.aqaralink.diagnostics as diag_mod
     assert "LearnedPathCache" not in dir(diag_mod)
     assert "path_cache" not in dir(diag_mod)

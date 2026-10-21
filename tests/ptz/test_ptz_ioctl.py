@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from custom_components.aqara_lanlink.ptz import ioctl
+from custom_components.aqaralink.ptz import ioctl
 
 
 def test_build_left_matches_layout():

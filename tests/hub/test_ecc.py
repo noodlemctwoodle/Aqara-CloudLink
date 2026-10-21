@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.ecc import (
+from custom_components.aqaralink.hub.ecc import (
     CURVE_A,
     CURVE_B,
     CURVE_ORDER,

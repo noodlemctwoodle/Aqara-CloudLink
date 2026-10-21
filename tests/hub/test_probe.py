@@ -6,18 +6,18 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.hub.probe import (
+from custom_components.aqaralink.hub.probe import (
     ProbeResult,
     probe_tunnel_host,
 )
-from custom_components.aqara_lanlink.hub.tunnel import TunnelError
+from custom_components.aqaralink.hub.tunnel import TunnelError
 
 
 async def _run(connect_side_effect):
     tunnel = AsyncMock()
     tunnel.connect.side_effect = connect_side_effect
     with patch(
-        "custom_components.aqara_lanlink.hub.probe.EncryptedTunnel",
+        "custom_components.aqaralink.hub.probe.EncryptedTunnel",
         return_value=tunnel,
     ):
         return await probe_tunnel_host(
@@ -62,7 +62,7 @@ async def test_probe_always_closes_the_tunnel(side_effect):
     tunnel = AsyncMock()
     tunnel.connect.side_effect = side_effect
     with patch(
-        "custom_components.aqara_lanlink.hub.probe.EncryptedTunnel",
+        "custom_components.aqaralink.hub.probe.EncryptedTunnel",
         return_value=tunnel,
     ):
         await probe_tunnel_host("10.0.0.1", 1234, "lumi1.abc", timeout=0.5)

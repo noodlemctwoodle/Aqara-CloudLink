@@ -3,8 +3,8 @@
 import asyncio
 import pytest
 
-from custom_components.aqara_lanlink.hub.session import LANLinkClient
-from custom_components.aqara_lanlink.hub.protocol import (
+from custom_components.aqaralink.hub.session import LANLinkClient
+from custom_components.aqaralink.hub.protocol import (
     LANReport,
     LANLINK_CMD_CHECKIN,
     LANLINK_CMD_CHECKIN_DONE,
@@ -408,7 +408,7 @@ class TestListenReportCallback:
         tunnel.push_eof()
         client = LANLinkClient(tunnel, DEVICE_ID, USER_ID, MODEL)
         with caplog.at_level(
-            logging.DEBUG, logger="custom_components.aqara_lanlink.hub.session",
+            logging.DEBUG, logger="custom_components.aqaralink.hub.session",
         ):
             await client.listen()
         assert any(

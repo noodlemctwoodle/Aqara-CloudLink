@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from custom_components.aqara_lanlink.ptz import cs2
+from custom_components.aqaralink.ptz import cs2
 
 PAIRS = json.loads(
     (pathlib.Path(__file__).parent / "fixtures/cipher_pairs_sample.json").read_text()

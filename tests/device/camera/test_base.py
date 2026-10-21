@@ -17,10 +17,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import voluptuous as vol
 
-from custom_components.aqara_lanlink.camera import AqaraCameraEntity
-from custom_components.aqara_lanlink.device.base import SelfDeviceContext
-from custom_components.aqara_lanlink.device.camera.base import CameraDevice
-from custom_components.aqara_lanlink.device.camera.number_entities import (
+from custom_components.aqaralink.camera import AqaraCameraEntity
+from custom_components.aqaralink.device.base import SelfDeviceContext
+from custom_components.aqaralink.device.camera.base import CameraDevice
+from custom_components.aqaralink.device.camera.number_entities import (
     DEFAULT_DETECTION_CLEAR_DELAY_S,
     DetectionClearDelayNumber,
 )
@@ -103,7 +103,7 @@ def _patch_camera_runtime():
         talk_inst.connect = AsyncMock(return_value=True)
         talk_inst.disconnect = AsyncMock()
         with patch(
-            "custom_components.aqara_lanlink.device.camera.base."
+            "custom_components.aqaralink.device.camera.base."
             "AqaraLanTalkClient",
             return_value=talk_inst,
         ):
@@ -174,7 +174,7 @@ def _patch_catalog_known_paths(monkeypatch, paths: set[str]) -> None:
     that prefill's "is this candidate a known catalogue path" filter
     accepts the synthetic wire paths used in these unit tests.
     """
-    from custom_components.aqara_lanlink.device import catalog
+    from custom_components.aqaralink.device import catalog
     monkeypatch.setattr(
         catalog, "all_traits_for_model", lambda model: {p: None for p in paths},
     )
@@ -254,7 +254,7 @@ async def test_prefill_extras_discovers_camera_endpoint_from_catalogue(monkeypat
     # 2.136.20368 as a known path so the discovery filter accepts it.
     monkeypatch.setattr(_TestCamera, "RTSP_URL_TRAIT_PATH", "7.136.20368")
     _patch_catalog_known_paths(monkeypatch, {"2.136.20368", "7.136.20368"})
-    from custom_components.aqara_lanlink.device import catalog
+    from custom_components.aqaralink.device import catalog
     monkeypatch.setattr(
         catalog, "endpoints_for_model",
         lambda model: {2: {"deviceType": "Camera"}},
@@ -305,7 +305,7 @@ async def test_prefill_extras_returns_none_when_model_has_no_rtsp_trait(monkeypa
     monkeypatch.setattr(_TestCamera, "RTSP_URL_TRAIT_PATH", "")
     # Catalogue exposes a Camera endpoint at ep 2 but no CameraRTSPURL path.
     _patch_catalog_known_paths(monkeypatch, {"2.136.32930", "2.136.20030"})
-    from custom_components.aqara_lanlink.device import catalog
+    from custom_components.aqaralink.device import catalog
     monkeypatch.setattr(
         catalog, "endpoints_for_model",
         lambda model: {2: {"deviceType": "Camera"}},
@@ -368,14 +368,14 @@ class TestCameraDeviceSetupCamera:
         cameras = await device.async_setup_camera(hub, _camera_subentry())
         assert cameras
 
-        from custom_components.aqara_lanlink.device.camera import go2rtc
+        from custom_components.aqaralink.device.camera import go2rtc
         assert len(captured_args) == 1
         func, args = captured_args[0]
         assert func is go2rtc.register_stream
 
         config_dir, stream_name, sources = args
         assert config_dir == "/fake/config"
-        assert stream_name == "aqara_lanlink_10_1_20_150"
+        assert stream_name == "aqaralink_10_1_20_150"
         # Three sources: RTSP camera input, ffmpeg transcode/repack, exec backchannel.
         assert len(sources) == 3
         assert any(s.startswith("rtsp://") for s in sources)
@@ -409,7 +409,7 @@ class TestCameraDeviceSetupCamera:
         )
         hub = _hub(hass=hass)
         await device.async_setup_camera(hub, _camera_subentry())
-        assert device.go2rtc_stream_name == "aqara_lanlink_10_1_20_150"
+        assert device.go2rtc_stream_name == "aqaralink_10_1_20_150"
 
     async def test_ffmpeg_source_includes_video_copy(self):
         """The ffmpeg producer source must include #video=copy so go2rtc
@@ -459,12 +459,12 @@ class TestCameraDeviceSetup:
         )
         with _patch_camera_runtime():
             await device.async_setup(hub, _camera_subentry())
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
         assert (DOMAIN, "play_audio_file") in hass.services._registry
 
     async def test_setup_does_not_double_register_services(self):
         hass = _hass_with_services()
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
         sentinel = object()
         hass.services._registry[(DOMAIN, "play_audio_file")] = sentinel
 
@@ -495,7 +495,7 @@ class TestCameraDeviceUnload:
             derived=[],
         )
         with patch(
-            "custom_components.aqara_lanlink.device.camera.base."
+            "custom_components.aqaralink.device.camera.base."
             "AqaraLanTalkClient"
         ) as talk_cls:
             talk_inst = MagicMock()
@@ -505,12 +505,12 @@ class TestCameraDeviceUnload:
             talk_cls.return_value = talk_inst
 
             await device.async_setup(hub, _camera_subentry())
-            device.go2rtc_stream_name = "aqara_lanlink_10_1_20_150"
+            device.go2rtc_stream_name = "aqaralink_10_1_20_150"
 
             await device.async_unload()
 
             talk_inst.disconnect.assert_awaited_once()
-            from custom_components.aqara_lanlink.device.camera import go2rtc
+            from custom_components.aqaralink.device.camera import go2rtc
             executor_calls = [
                 c for c in hass.async_add_executor_job.call_args_list
                 if c.args and c.args[0] is go2rtc.remove_stream
@@ -525,7 +525,7 @@ class TestCameraDeviceUnload:
             subentry=_camera_subentry(),
             derived=[],
         )
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
 
         with _patch_camera_runtime():
             await device.async_setup(hub, _camera_subentry())
@@ -538,7 +538,7 @@ class TestCameraDeviceUnload:
         services for the remaining devices."""
         hass = _hass_with_services()
         hub = _hub(hass=hass)
-        from custom_components.aqara_lanlink.const import DOMAIN
+        from custom_components.aqaralink.const import DOMAIN
 
         device1 = _TestCamera(
             coordinator=SimpleNamespace(),
@@ -590,7 +590,7 @@ def test_services_yaml_declares_play_audio_file():
     # parents[0]=camera, parents[1]=device, parents[2]=tests, parents[3]=repo root.
     path = (
         pathlib.Path(__file__).parents[3]
-        / "custom_components" / "aqara_lanlink" / "services.yaml"
+        / "custom_components" / "aqaralink" / "services.yaml"
     )
     doc = yaml.safe_load(path.read_text())
     assert "play_audio_file" in doc
@@ -600,10 +600,10 @@ def test_services_yaml_declares_play_audio_file():
 
 
 def _auto_clear_descriptor():
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.descriptors import (
         BinarySensorDescriptor,
     )
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     return BinarySensorDescriptor(
         key="motion", name="Motion",
         trait=TraitSpec(id="5.160.33000", name="Motion"),
@@ -655,10 +655,10 @@ async def test_async_setup_extra_numbers_is_idempotent():
 
 
 async def test_resolve_auto_clear_seconds_uses_live_number():
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.descriptors import (
         BinarySensorDescriptor,
     )
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     desc = BinarySensorDescriptor(
         key="k", name="n", trait=TraitSpec(id="1.1.1", name="n"),
         auto_clear_seconds=30.0,
@@ -678,7 +678,7 @@ async def test_resolve_auto_clear_seconds_uses_live_number():
 
 
 def test_camera_device_rtsp_trait_path_default():
-    from custom_components.aqara_lanlink.device.camera.base import CameraDevice
+    from custom_components.aqaralink.device.camera.base import CameraDevice
     assert CameraDevice.RTSP_URL_TRAIT_PATH == "7.136.20368"
 
 
@@ -709,8 +709,8 @@ async def test_play_audio_file_resolves_across_camera_models():
     because a second model's devices would never appear in the first model's
     private registry.
     """
-    from custom_components.aqara_lanlink.const import DOMAIN
-    from custom_components.aqara_lanlink.device.camera.base import (
+    from custom_components.aqaralink.const import DOMAIN
+    from custom_components.aqaralink.device.camera.base import (
         _CAMERA_REGISTRY_KEY,
         _resolve_camera_for_call,
     )

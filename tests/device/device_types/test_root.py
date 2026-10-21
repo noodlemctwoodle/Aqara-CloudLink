@@ -1,13 +1,13 @@
 """Tests for the Root deviceType composer (endpoint 0)."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, _fallback, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     SensorDescriptor, SelectDescriptor, NumberDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.helpers.entity import EntityCategory
 
 
@@ -36,7 +36,7 @@ def test_root_identify_traits_are_diagnostic_fallback_entities():
     confirmed on every Aqara device). Surfaced via _fallback's data_type
     dispatch under the diagnostic category set by the generator; no
     BUTTON_TRAITS short-circuit applies."""
-    from custom_components.aqara_lanlink.device.descriptors import ButtonDescriptor
+    from custom_components.aqaralink.device.descriptors import ButtonDescriptor
     traits = {
         "0.131.32916": TraitSpec(
             id="0.131.32916", wire_path="0.131.32916",

@@ -17,23 +17,23 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from custom_components.aqara_lanlink.button import AqaraButton
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.build_descriptors import build_descriptors
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.button import AqaraButton
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.build_descriptors import build_descriptors
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import (
     ButtonDescriptor,
     NumberDescriptor,
     SelectDescriptor,
     SwitchDescriptor,
     TextDescriptor,
 )
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.entity import build_descriptor_entities
-from custom_components.aqara_lanlink.number import AqaraNumber
-from custom_components.aqara_lanlink.select import AqaraSelect
-from custom_components.aqara_lanlink.switch import AqaraSwitch
-from custom_components.aqara_lanlink.text import AqaraText
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.entity import build_descriptor_entities
+from custom_components.aqaralink.number import AqaraNumber
+from custom_components.aqaralink.select import AqaraSelect
+from custom_components.aqaralink.switch import AqaraSwitch
+from custom_components.aqaralink.text import AqaraText
 
 from homeassistant.const import EntityCategory
 
@@ -306,13 +306,13 @@ async def test_text_set_value_writes_full_value_but_caps_cached_state():
 # `set_voltage_up_limit`=250 must fall inside the bounds to be settable, and a
 # negative-valued setting (temperature offset) needs the symmetric lower bound.
 
-from custom_components.aqara_lanlink.device import registry  # noqa: E402
-from custom_components.aqara_lanlink.device.build_descriptors import (  # noqa: E402
+from custom_components.aqaralink.device import registry  # noqa: E402
+from custom_components.aqaralink.device.build_descriptors import (  # noqa: E402
     WIDE_MAX,
     WIDE_MIN,
     build_setting_descriptors,
 )
-from custom_components.aqara_lanlink.device.settings import SettingSpec  # noqa: E402
+from custom_components.aqaralink.device.settings import SettingSpec  # noqa: E402
 
 from homeassistant.components.number import NumberMode  # noqa: E402
 

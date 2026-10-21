@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ts(**kwargs):
@@ -168,14 +168,14 @@ def test_v3d7_fields_participate_in_hash_and_equality():
 
 
 def test_trait_spec_auto_clear_seconds_requires_binary_sensor():
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     with pytest.raises(RuntimeError, match="auto_clear_seconds"):
         TraitSpec(id="1.1.1", name="x", platform="sensor", auto_clear_seconds=30.0)
     TraitSpec(id="1.1.1", name="x", platform="binary_sensor", auto_clear_seconds=30.0)
 
 
 def test_trait_spec_auto_clear_seconds_must_be_positive_finite():
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     with pytest.raises(RuntimeError, match="auto_clear_seconds"):
         TraitSpec(id="1.1.1", name="x", platform="binary_sensor", auto_clear_seconds=0.0)
     with pytest.raises(RuntimeError, match="auto_clear_seconds"):
@@ -191,7 +191,7 @@ def test_button_is_a_valid_platform():
 
 
 def test_trait_spec_auto_clear_seconds_hashable():
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     a = TraitSpec(id="1.1.1", name="x", platform="binary_sensor", auto_clear_seconds=30.0)
     b = TraitSpec(id="1.1.1", name="x", platform="binary_sensor", auto_clear_seconds=30.0)
     assert hash(a) == hash(b)

@@ -6,8 +6,8 @@ import types
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.settings import SettingSpec
 
 
 @pytest.fixture(autouse=True)

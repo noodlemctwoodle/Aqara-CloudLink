@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device.device_types._build import build_descriptor
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.device_types._build import build_descriptor
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor, ButtonDescriptor, EventDescriptor, NumberDescriptor,
     SelectDescriptor, SensorDescriptor, SwitchDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.components.sensor import SensorDeviceClass
 
 

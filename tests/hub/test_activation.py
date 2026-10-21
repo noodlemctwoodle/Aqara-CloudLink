@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from custom_components.aqara_lanlink.hub import activation
+from custom_components.aqaralink.hub import activation
 
 
 @pytest.mark.asyncio

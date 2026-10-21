@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 import pytest
 import yaml
 
-from custom_components.aqara_lanlink.device.camera.const import CHANNELS
-from custom_components.aqara_lanlink.device.camera.go2rtc import (
+from custom_components.aqaralink.device.camera.const import CHANNELS
+from custom_components.aqaralink.device.camera.go2rtc import (
     build_exec_source,
     build_rtsp_source,
     register_stream,
@@ -60,7 +60,7 @@ class TestBuildExecSource:
     def test_contains_bridge_script_path(self):
         result = build_exec_source("/config", "10.1.20.150")
         assert (
-            "/config/custom_components/aqara_lanlink/device/camera/bridge.py"
+            "/config/custom_components/aqaralink/device/camera/bridge.py"
             in result
         )
 
@@ -77,7 +77,7 @@ class TestBuildExecSource:
     def test_different_config_dir(self):
         result = build_exec_source("/data/homeassistant", "10.0.0.1")
         assert (
-            "/data/homeassistant/custom_components/aqara_lanlink/device/camera/bridge.py"
+            "/data/homeassistant/custom_components/aqaralink/device/camera/bridge.py"
             in result
         )
 

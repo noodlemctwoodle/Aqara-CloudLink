@@ -1,9 +1,9 @@
 """Capability declaration: CAPABILITIES in overrides.py -> catalog helper."""
 from pathlib import Path
 
-from custom_components.aqara_lanlink.device.models._loader import load_model_data
+from custom_components.aqaralink.device.models._loader import load_model_data
 
-MODELS = Path(__file__).parents[2] / "custom_components/aqara_lanlink/device/models"  # ptz/ -> tests/ -> repo root
+MODELS = Path(__file__).parents[2] / "custom_components/aqaralink/device/models"  # ptz/ -> tests/ -> repo root
 
 
 def test_loader_emits_capabilities_for_g350():
@@ -18,7 +18,7 @@ def test_loader_defaults_capabilities_empty_when_absent():
 
 
 def test_registry_indexes_capabilities():
-    from custom_components.aqara_lanlink.device import registry
+    from custom_components.aqaralink.device import registry
     registry._ensure_discovered()
     assert registry._CAPABILITIES_INDEX["lumi.camera.agl010"] == {
         "ptz": frozenset({"pan_tilt", "zoom", "presets"})
@@ -26,7 +26,7 @@ def test_registry_indexes_capabilities():
 
 
 def test_ptz_features_for_model():
-    from custom_components.aqara_lanlink.device.catalog import ptz_features_for_model
+    from custom_components.aqaralink.device.catalog import ptz_features_for_model
     assert ptz_features_for_model("lumi.camera.agl010") == frozenset(
         {"pan_tilt", "zoom", "presets"}
     )

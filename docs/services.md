@@ -6,7 +6,7 @@ routine day-to-day use of the integration.
 
 ---
 
-## aqara_lanlink.scan_device
+## aqaralink.scan_device
 
 **Purpose.** Runs a one-shot cloud scan against a single Aqara device to
 discover traits that the shipped V3 catalogue does not yet cover. The service
@@ -59,14 +59,14 @@ scan fails unexpectedly.
 **Example action call.**
 
 ```yaml
-action: aqara_lanlink.scan_device
+action: aqaralink.scan_device
 data:
   device_id: <device id>
 ```
 
 ---
 
-## aqara_lanlink.export_overlay
+## aqaralink.export_overlay
 
 **Purpose.** Renders the traits you have accepted into the local overlay as a
 Python `TraitSpec` snippet, formatted ready to paste into a model package's
@@ -102,21 +102,21 @@ a PR; the renderer does not filter out low-quality or redundant traits.
 Export all models in the overlay:
 
 ```yaml
-action: aqara_lanlink.export_overlay
+action: aqaralink.export_overlay
 data: {}
 ```
 
 Export a single model:
 
 ```yaml
-action: aqara_lanlink.export_overlay
+action: aqaralink.export_overlay
 data:
   model: lumi.camera.acn003
 ```
 
 ---
 
-## aqara_lanlink.play_audio_file
+## aqaralink.play_audio_file
 
 **Purpose.** Streams a local AAC-ADTS audio file to a camera or doorbell
 speaker over the LAN link. Useful for playing custom chimes, announcements, or
@@ -132,7 +132,7 @@ alerts through an Aqara device that has a built-in speaker.
 **Example action call.**
 
 ```yaml
-action: aqara_lanlink.play_audio_file
+action: aqaralink.play_audio_file
 data:
   device_id: <device id>
   file_path: /media/chime.aac
@@ -142,7 +142,7 @@ data:
 
 ## PTZ service (cameras)
 
-A single camera entity service, `aqara_lanlink.ptz`, provides pan, tilt, zoom,
+A single camera entity service, `aqaralink.ptz`, provides pan, tilt, zoom,
 and preset recall for supported camera models. It targets a camera entity
 directly (not a device) and only works when the camera model declares the `ptz`
 capability and the camera's IP address is configured in the integration options.
@@ -162,7 +162,7 @@ PTZ works, and which models support it.
 - The camera IP must be set in the integration options for that subentry.
 - A valid cloud login is required (PTZ session auth is cloud-assisted).
 
-### aqara_lanlink.ptz
+### aqaralink.ptz
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -173,7 +173,7 @@ PTZ works, and which models support it.
 | `duration` | No | For a continuous directional move: seconds before auto-stop. Omit to move until `stop`. |
 
 ```yaml
-action: aqara_lanlink.ptz
+action: aqaralink.ptz
 target:
   entity_id: camera.g350_front_door
 data:
@@ -183,7 +183,7 @@ data:
 ```
 
 ```yaml
-action: aqara_lanlink.ptz
+action: aqaralink.ptz
 target:
   entity_id: camera.g350_front_door
 data:
@@ -203,11 +203,11 @@ backchannel mechanism.
 each camera. The stream name is derived from the camera's IP address:
 
 ```
-aqara_lanlink_<camera IP with dots replaced by underscores>
+aqaralink_<camera IP with dots replaced by underscores>
 ```
 
 For example, a camera at `192.168.1.50` produces the stream name
-`aqara_lanlink_192_168_1_50`.
+`aqaralink_192_168_1_50`.
 
 **WebRTC card requirement.** To use the backchannel you must use the
 [AlexxIT WebRTC custom card](https://github.com/AlexxIT/WebRTC) and reference
@@ -216,7 +216,7 @@ backchannel.
 
 ```yaml
 type: custom:webrtc-camera
-url: aqara_lanlink_192_168_1_50
+url: aqaralink_192_168_1_50
 ```
 
 Replace `192_168_1_50` with the underscored IP of your camera.

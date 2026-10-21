@@ -8,8 +8,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.hub import tunnel as tmod
-from custom_components.aqara_lanlink.hub.crypto import aes_cbc_encrypt
+from custom_components.aqaralink.hub import tunnel as tmod
+from custom_components.aqaralink.hub.crypto import aes_cbc_encrypt
 
 # Synthetic verify frames in the structure validated against a real M3 hub
 # (commit 23125981): 00 10 <enc1:16> 00 20 <enc2:32>, where
@@ -76,7 +76,7 @@ async def test_connect_passes_ssl_to_open_connection(monkeypatch):
         captured.update(host=host, port=port, **kw)
         return object(), object()  # reader, writer stubs
     monkeypatch.setattr("asyncio.open_connection", fake_open)
-    from custom_components.aqara_lanlink.hub.tunnel import EncryptedTunnel
+    from custom_components.aqaralink.hub.tunnel import EncryptedTunnel
     t = EncryptedTunnel(device_id="lumi1.test", keepalive_interval=0)
     ctx = _ssl.SSLContext(_ssl.PROTOCOL_TLS_CLIENT)
     try:

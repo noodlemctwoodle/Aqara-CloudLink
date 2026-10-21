@@ -12,16 +12,16 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.aqara_lanlink import config_flow
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink import config_flow
+from custom_components.aqaralink.const import (
     CONF_HUB_DID,
     CONF_HUB_IP,
     DOMAIN,
 )
-from custom_components.aqara_lanlink.hub.probe import ProbeResult
+from custom_components.aqaralink.hub.probe import ProbeResult
 
-_PROBE_TARGET = "custom_components.aqara_lanlink.config_flow.probe_tunnel_host"
-_DISCOVER_TARGET = "custom_components.aqara_lanlink.config_flow.discover_hubs"
+_PROBE_TARGET = "custom_components.aqaralink.config_flow.probe_tunnel_host"
+_DISCOVER_TARGET = "custom_components.aqaralink.config_flow.discover_hubs"
 
 _MANUAL_IP = "192.0.2.50"
 _MANUAL_DID = "lumi1.ABCDEF123456"
@@ -125,12 +125,12 @@ from pytest_homeassistant_custom_component.common import (  # noqa: E402
     MockConfigEntry,
 )
 
-from custom_components.aqara_lanlink import config_flow as config_flow_module  # noqa: E402
-from custom_components.aqara_lanlink.config_flow import (  # noqa: E402
+from custom_components.aqaralink import config_flow as config_flow_module  # noqa: E402
+from custom_components.aqaralink.config_flow import (  # noqa: E402
     AqaraDeviceSubentryFlow,
     _MANUAL_ACTIVATE_SENTINEL,
 )
-from custom_components.aqara_lanlink.const import (  # noqa: E402
+from custom_components.aqaralink.const import (  # noqa: E402
     CONF_ACTIVATION_HOST,
     CONF_ACTIVATION_PORT,
     CONF_AQARA_ACCOUNT,

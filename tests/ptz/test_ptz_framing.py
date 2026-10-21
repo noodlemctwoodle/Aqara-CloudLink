@@ -12,7 +12,7 @@ Oracles (extracted from data/frida/*.txt P2P_Proprietary_Encrypt/Decrypt dumps):
 """
 import pytest
 
-from custom_components.aqara_lanlink.ptz import cs2, framing, ioctl
+from custom_components.aqaralink.ptz import cs2, framing, ioctl
 
 KEY = "aqarager19kn"
 

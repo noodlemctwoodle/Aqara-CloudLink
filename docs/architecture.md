@@ -133,7 +133,7 @@ For the data-model vocabulary (TraitSpec fields, descriptor types, wire paths, t
 
 ## 5. The per-install overlay
 
-The overlay is a local extension of the shipped catalogue stored in HA's `.storage` directory (`aqara_lanlink.overlay`). It is read once at integration startup and passed into `build_descriptors` for every device. Its merge semantics give it precedence: overlay entries replace or remove catalogue entries at the same wire path.
+The overlay is a local extension of the shipped catalogue stored in HA's `.storage` directory (`aqaralink.overlay`). It is read once at integration startup and passed into `build_descriptors` for every device. Its merge semantics give it precedence: overlay entries replace or remove catalogue entries at the same wire path.
 
 Only two code paths write the overlay:
 - The `scan_review` Repair accept handler in `repairs.py` (`_ScanReviewFlow._accept`), which is triggered after the user clicks Fix on the Repair issue raised by the `scan_device` service. The service itself raises the Repair and writes nothing; the overlay write happens when the user reviews and accepts the discovered traits.
@@ -179,7 +179,7 @@ The integration raises three categories of HA Repair issues:
 
 - **`push_stalled`** -- "Aqara hub stopped sending updates." The hub is connected and reports a non-empty topology, but no trait report has arrived for an extended period. Probable causes: the LAN Control toggle in the Aqara app was disabled, or the hub needs a reboot. The watchdog re-arms the subscription automatically; the Repair is raised after three consecutive failed re-arms.
 
-- **`candidate_paths`** -- "New device capabilities observed." Wire paths arrived in push reports that are not in the catalogue or overlay for the relevant model. The Fix action invokes the `aqara_lanlink.scan_device` service to perform a cloud scan and surface a review flow. See [services.md](services.md).
+- **`candidate_paths`** -- "New device capabilities observed." Wire paths arrived in push reports that are not in the catalogue or overlay for the relevant model. The Fix action invokes the `aqaralink.scan_device` service to perform a cloud scan and surface a review flow. See [services.md](services.md).
 
 - **`scan_review_<entry>_<did>`** -- Raised after `scan_device` completes. The user reviews the discovered traits and accepts them into the per-install overlay.
 
@@ -269,5 +269,5 @@ DEFERRAL: a LAN-only install with no cloud configured currently shows these enti
 - [catalogue-and-traits.md](catalogue-and-traits.md) -- data model vocabulary: TraitSpec, descriptors, wire paths, trait policy
 - [overrides.md](overrides.md) -- correcting catalogue data for your installation
 - [adding-device-support.md](adding-device-support.md) -- contributor workflow for new models
-- [services.md](services.md) -- `aqara_lanlink.scan_device` and other services
+- [services.md](services.md) -- `aqaralink.scan_device` and other services
 - [troubleshooting.md](troubleshooting.md) -- diagnosing missing entities, stalled pushes, and other issues

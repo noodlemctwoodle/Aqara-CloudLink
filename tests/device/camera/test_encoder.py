@@ -4,13 +4,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.camera.encoder import AACEncoder
+from custom_components.aqaralink.device.camera.encoder import AACEncoder
 
 
 class TestAACEncoder:
     def test_start_spawns_ffmpeg(self):
         with patch(
-            "custom_components.aqara_lanlink.device.camera.encoder.subprocess.Popen"
+            "custom_components.aqaralink.device.camera.encoder.subprocess.Popen"
         ) as mock_popen:
             mock_proc = MagicMock()
             mock_popen.return_value = mock_proc
@@ -27,7 +27,7 @@ class TestAACEncoder:
 
     def test_encode_writes_to_stdin(self):
         with patch(
-            "custom_components.aqara_lanlink.device.camera.encoder.subprocess.Popen"
+            "custom_components.aqaralink.device.camera.encoder.subprocess.Popen"
         ) as mock_popen:
             mock_proc = MagicMock()
             mock_proc.stdin = MagicMock()
@@ -37,7 +37,7 @@ class TestAACEncoder:
 
             # Make select.select return empty so we skip the read loop
             with patch(
-                "custom_components.aqara_lanlink.device.camera.encoder.select.select",
+                "custom_components.aqaralink.device.camera.encoder.select.select",
                 return_value=([], [], []),
             ):
                 enc = AACEncoder()
@@ -49,7 +49,7 @@ class TestAACEncoder:
 
     def test_stop_closes_process(self):
         with patch(
-            "custom_components.aqara_lanlink.device.camera.encoder.subprocess.Popen"
+            "custom_components.aqaralink.device.camera.encoder.subprocess.Popen"
         ) as mock_popen:
             mock_proc = MagicMock()
             mock_proc.poll.return_value = None

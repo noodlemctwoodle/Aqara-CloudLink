@@ -55,7 +55,7 @@ See [architecture.md](architecture.md) for the security and privacy section.
 
 Yes, for supported camera models. When the camera model declares the `ptz`
 capability in its `overrides.py`, the integration registers pan/tilt/zoom
-buttons, a preset selector entity, and a single `aqara_lanlink.ptz` camera
+buttons, a preset selector entity, and a single `aqaralink.ptz` camera
 service (with a `command` field covering move/stop/zoom/preset). This requires the camera's IP
 address to be set in the integration options for that subentry; a valid cloud
 login is also needed because PTZ session authentication is cloud-assisted.

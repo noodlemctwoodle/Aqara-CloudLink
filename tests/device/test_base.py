@@ -9,19 +9,19 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.base import (
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.base import (
     AutoDerivedDevice,
     Device,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor,
     EventDescriptor,
     LightDescriptor,
     NumberDescriptor,
     SwitchDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 # ---------------------------------------------------------------------------
@@ -359,7 +359,7 @@ def test_register_entity_accepts_enum_sensor_descriptor():
     frozen SensorDescriptor unhashable, so register_entity raised
     TypeError ('unhashable type: list') when using it as a dict key.
     """
-    from custom_components.aqara_lanlink.device.device_types._build import (
+    from custom_components.aqaralink.device.device_types._build import (
         build_descriptor,
     )
 
@@ -779,11 +779,11 @@ def test_light_descriptor_indexed_by_all_absorbed_trait_paths():
 
 
 def test_resolve_auto_clear_seconds_returns_descriptor_value():
-    from custom_components.aqara_lanlink.device.base import Device
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.base import Device
+    from custom_components.aqaralink.device.descriptors import (
         BinarySensorDescriptor,
     )
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
     from types import SimpleNamespace
 
     desc = BinarySensorDescriptor(
@@ -800,7 +800,7 @@ def test_resolve_auto_clear_seconds_returns_descriptor_value():
 
 
 async def test_async_setup_extra_numbers_default_empty():
-    from custom_components.aqara_lanlink.device.base import Device
+    from custom_components.aqaralink.device.base import Device
     from types import SimpleNamespace
     dev = Device(coordinator=None, subentry=SimpleNamespace(data={}), derived=[])
     assert await dev.async_setup_extra_numbers(None, None) == []
@@ -820,11 +820,11 @@ async def test_seed_initial_value_keyed_by_wire_path_survives_descriptor_replace
     from dataclasses import replace
     from unittest.mock import MagicMock
     from types import SimpleNamespace
-    from custom_components.aqara_lanlink.device.base import Device
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.base import Device
+    from custom_components.aqaralink.device.descriptors import (
         BinarySensorDescriptor,
     )
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     spec = TraitSpec(id="5.160.33000", name="Original", data_type="bool")
     desc_old = BinarySensorDescriptor(
@@ -854,12 +854,12 @@ async def test_seed_replay_for_light_descriptor_components_routes_to_component()
     """
     from unittest.mock import MagicMock
     from types import SimpleNamespace
-    from custom_components.aqara_lanlink.device.base import Device
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.base import Device
+    from custom_components.aqaralink.device.descriptors import (
         LightDescriptor,
     )
-    from custom_components.aqara_lanlink.device.attrs import AttrSpec
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device.attrs import AttrSpec
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     power = TraitSpec(id="2.1.85", name="Power", data_type="bool")
     brightness = TraitSpec(id="2.2.85", name="Brightness", data_type="number")
@@ -903,8 +903,8 @@ def test_descriptor_wire_paths_yields_attr_backed_paths():
     those too, otherwise values seeded via seed_initial_value(attr.name, ...)
     cannot be delivered to the entity at register_entity time.
     """
-    from custom_components.aqara_lanlink.device.base import _descriptor_wire_paths
-    from custom_components.aqara_lanlink.device.descriptors import (
+    from custom_components.aqaralink.device.base import _descriptor_wire_paths
+    from custom_components.aqaralink.device.descriptors import (
         NumberDescriptor,
         SelectDescriptor,
         SwitchDescriptor,

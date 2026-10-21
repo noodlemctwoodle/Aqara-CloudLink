@@ -15,8 +15,8 @@ import asyncio
 
 import pytest
 
-from custom_components.aqara_lanlink.ptz import cs2, framing, ioctl
-from custom_components.aqara_lanlink.ptz.session import (
+from custom_components.aqaralink.ptz import cs2, framing, ioctl
+from custom_components.aqaralink.ptz.session import (
     PptzTimeout,
     PtzSession,
     _RxProtocol,

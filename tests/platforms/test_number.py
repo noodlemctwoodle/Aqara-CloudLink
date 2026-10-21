@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import NumberDescriptor
-from custom_components.aqara_lanlink.number import AqaraNumber, async_setup_entry
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import NumberDescriptor
+from custom_components.aqaralink.number import AqaraNumber, async_setup_entry
 
 from .conftest import make_device, make_hub, make_subentry
 
@@ -310,7 +310,7 @@ async def test_async_setup_entry_creates_one_entity_per_descriptor():
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_includes_extra_numbers():
-    from custom_components.aqara_lanlink.number import async_setup_entry
+    from custom_components.aqaralink.number import async_setup_entry
     hub = make_hub()
     sub = make_subentry(subentry_id="sub-1")
     device = make_device([], subentry=sub)

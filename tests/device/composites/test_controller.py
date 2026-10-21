@@ -2,8 +2,8 @@ from datetime import time
 
 import pytest
 
-from custom_components.aqara_lanlink.device.composites import CODECS
-from custom_components.aqara_lanlink.device.composites.controller import (
+from custom_components.aqaralink.device.composites import CODECS
+from custom_components.aqaralink.device.composites.controller import (
     CompositeController,
 )
 
@@ -85,7 +85,7 @@ async def test_async_set_repacks_all_fields():
 
 @pytest.mark.asyncio
 async def test_async_set_key_is_attrspec_not_string():
-    from custom_components.aqara_lanlink.device.attrs import AttrSpec
+    from custom_components.aqaralink.device.attrs import AttrSpec
 
     c = make()
     c.seed("5162040")
@@ -135,8 +135,8 @@ async def test_failed_write_does_not_commit():
     from datetime import time
     class BoomDevice:
         async def async_write(self, attrs): raise RuntimeError("boom")
-    from custom_components.aqara_lanlink.device.composites import CODECS
-    from custom_components.aqara_lanlink.device.composites.controller import CompositeController
+    from custom_components.aqaralink.device.composites import CODECS
+    from custom_components.aqaralink.device.composites.controller import CompositeController
     c = CompositeController(BoomDevice(), "14.92.85", CODECS["packed_period"])
     c.seed("5162040")
     import pytest

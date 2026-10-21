@@ -1,11 +1,11 @@
 """Tests for the OccupancySensor deviceType composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, occupancy_sensor, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import BinarySensorDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.descriptors import BinarySensorDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
 
@@ -81,7 +81,7 @@ def test_motion_occupancy_is_momentary_with_auto_clear():
     _should_replay_seed -- otherwise it restores a stale 'on' from the recorder
     and boots activated on every restart, and the per-camera Detection clear
     delay setting (resolve_auto_clear_seconds) never applies to it."""
-    from custom_components.aqara_lanlink.device.base import _should_replay_seed
+    from custom_components.aqaralink.device.base import _should_replay_seed
     spec = TraitSpec(
         id="5.160.33000", wire_path="5.160.33000",
         function_code="OccupancySensing", trait_code="Occupancy",
@@ -98,7 +98,7 @@ def test_motion_occupancy_is_momentary_with_auto_clear():
 def test_occupancy_presence_stays_stateful():
     """OccupancySensor presence is genuine state: no auto_clear, so it restores
     its last value on restart (the device drives both on and off)."""
-    from custom_components.aqara_lanlink.device.base import _should_replay_seed
+    from custom_components.aqaralink.device.base import _should_replay_seed
     d = occupancy_sensor.compose(
         endpoint_id=2, traits={"2.160.33000": _occupancy_trait()}, context=_ctx(),
     )[0]

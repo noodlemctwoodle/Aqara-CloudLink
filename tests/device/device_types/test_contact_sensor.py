@@ -1,11 +1,11 @@
 """Tests for the ContactSensor deviceType composer."""
 from __future__ import annotations
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, contact_sensor, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import BinarySensorDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.descriptors import BinarySensorDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
 

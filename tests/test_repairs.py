@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.helpers import issue_registry as ir
 
-from custom_components.aqara_lanlink.const import DOMAIN
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.repairs import (
+from custom_components.aqaralink.const import DOMAIN
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.repairs import (
     _ScanReviewFlow,
     async_create_fix_flow,
 )

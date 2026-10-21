@@ -6,7 +6,7 @@ import inspect
 
 import pytest
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base,
     _fallback,
     get_composer,

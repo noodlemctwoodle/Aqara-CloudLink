@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.camera import (
+from custom_components.aqaralink.camera import (
     AqaraCameraEntity,
     async_setup_entry,
 )
@@ -133,7 +133,7 @@ async def test_camera_image_uses_ffmpeg_helper(monkeypatch):
         return b"JPEGBYTES"
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.camera.async_get_image", _fake_get_image,
+        "custom_components.aqaralink.camera.async_get_image", _fake_get_image,
     )
     assert await cam.async_camera_image() == b"JPEGBYTES"
 

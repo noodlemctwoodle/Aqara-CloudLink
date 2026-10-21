@@ -7,8 +7,8 @@ from textwrap import dedent
 
 import pytest
 
-from custom_components.aqara_lanlink.device.models import _loader
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device.models import _loader
+from custom_components.aqaralink.device.settings import SettingSpec
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def settings_package(tmp_path: Path) -> Path:
         },
     }))
     (pkg / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {}
     """).strip())
     return pkg
@@ -85,8 +85,8 @@ def test_power_class_none_when_absent(settings_package: Path):
 
 def test_settings_override_none_drops(settings_package: Path):
     (settings_package / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.device.settings import SettingSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.settings import SettingSpec
         OVERRIDES: dict[str, TraitSpec | None] = {}
         SETTINGS_OVERRIDES: dict[str, SettingSpec | None] = {"4.4.85": None}
     """).strip())
@@ -97,8 +97,8 @@ def test_settings_override_none_drops(settings_package: Path):
 
 def test_settings_override_replaces(settings_package: Path):
     (settings_package / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.device.settings import SettingSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.settings import SettingSpec
         OVERRIDES: dict[str, TraitSpec | None] = {}
         SETTINGS_OVERRIDES: dict[str, SettingSpec | None] = {
             "4.4.85": SettingSpec(
@@ -112,8 +112,8 @@ def test_settings_override_replaces(settings_package: Path):
 
 def test_settings_override_adds_new_rid(settings_package: Path):
     (settings_package / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
-        from custom_components.aqara_lanlink.device.settings import SettingSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.settings import SettingSpec
         OVERRIDES: dict[str, TraitSpec | None] = {}
         SETTINGS_OVERRIDES: dict[str, SettingSpec | None] = {
             "4.9.85": SettingSpec(

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import types
 
-from custom_components.aqara_lanlink.device import catalog, registry
+from custom_components.aqaralink.device import catalog, registry
 
 
 def _fake_pkg(

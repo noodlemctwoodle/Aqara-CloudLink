@@ -4,13 +4,13 @@ from __future__ import annotations
 import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
-from custom_components.aqara_lanlink.device.device_types import (
+from custom_components.aqaralink.device.device_types import (
     _base, _detectors, get_composer,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor, EventDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _ctx(device_type: str) -> _base.ComposeContext:
@@ -182,7 +182,7 @@ def test_detector_devicetype_registered(device_type):
     from classify_v3 and devices route through per-trait _fallback,
     losing the binary-sensor consolidation.
     """
-    from custom_components.aqara_lanlink.device.device_types import _fallback
+    from custom_components.aqaralink.device.device_types import _fallback
     composer = get_composer(device_type)
     assert composer is not _fallback.compose, (
         f"{device_type} falls back to per-trait classification; "
@@ -195,7 +195,7 @@ def test_motion_sensor_uses_motion_variant_of_occupancy_composer():
     OccupancySensing.Occupancy, but on this deviceType that trait IS motion
     detection -- so it routes to the motion variant (device_class=motion,
     name 'Motion'), NOT the plain occupancy composer."""
-    from custom_components.aqara_lanlink.device.device_types import occupancy_sensor
+    from custom_components.aqaralink.device.device_types import occupancy_sensor
     assert get_composer("MotionSensor") is occupancy_sensor.motion_compose
 
 
@@ -203,7 +203,7 @@ def test_video_doorbell_routes_to_fallback():
     """VideoDoorbell endpoints (e.g. agl013 ep 8) carry only Camera.* traits
     (RTSP URL, P2P enables, capture status) -- identical shape to a plain
     Camera endpoint. Both route straight to _fallback."""
-    from custom_components.aqara_lanlink.device.device_types import _fallback
+    from custom_components.aqaralink.device.device_types import _fallback
     assert get_composer("VideoDoorbell") is _fallback.compose
 
 

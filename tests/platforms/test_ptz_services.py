@@ -17,12 +17,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.aqara_lanlink import (
+from custom_components.aqaralink import (
     AqaraLanLinkRuntimeData,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink.const import (
     CONF_AQARA_REGION,
     CONF_AQARA_TOKEN,
     CONF_AQARA_USER_ID,
@@ -32,8 +32,8 @@ from custom_components.aqara_lanlink.const import (
     CONF_HUB_PORT,
     DOMAIN,
 )
-from custom_components.aqara_lanlink.device.base import SelfDeviceContext
-from custom_components.aqara_lanlink.device.camera.base import CameraDevice
+from custom_components.aqaralink.device.base import SelfDeviceContext
+from custom_components.aqaralink.device.camera.base import CameraDevice
 
 G350_MODEL = "lumi.camera.agl010"
 NON_PTZ_CAMERA_MODEL = "lumi.camera.acn003"
@@ -91,9 +91,9 @@ def _make_coordinator_mock(hub_did="lumi1.HUB") -> MagicMock:
 def _setup_patches(hass, coord):
     """Common patch stack for driving async_setup_entry."""
     return (
-        patch("custom_components.aqara_lanlink.HubCoordinator", return_value=coord),
+        patch("custom_components.aqaralink.HubCoordinator", return_value=coord),
         patch(
-            "custom_components.aqara_lanlink.AqaraCloudClient",
+            "custom_components.aqaralink.AqaraCloudClient",
             return_value=MagicMock(),
         ),
         patch.object(
@@ -106,7 +106,7 @@ def _setup_patches(hass, coord):
 @pytest.fixture
 def patch_clientsession():
     with patch(
-        "custom_components.aqara_lanlink.async_get_clientsession",
+        "custom_components.aqaralink.async_get_clientsession",
         return_value=MagicMock(),
     ) as p:
         yield p
@@ -299,7 +299,7 @@ class _RecordingController:
 
 
 def _camera_entity(controller=None):
-    from custom_components.aqara_lanlink.camera import AqaraCameraEntity
+    from custom_components.aqaralink.camera import AqaraCameraEntity
     from .conftest import make_device, make_hub, make_subentry
 
     hub = make_hub()
@@ -407,7 +407,7 @@ async def test_preset_command_requires_value():
 async def test_setup_entry_assigns_controller_from_runtime_data():
     """camera.py:async_setup_entry looks up the device's controller in
     runtime_data.ptz_controllers and stashes it on the entity."""
-    from custom_components.aqara_lanlink.camera import (
+    from custom_components.aqaralink.camera import (
         AqaraCameraEntity,
         async_setup_entry as camera_setup,
     )
@@ -444,20 +444,20 @@ async def test_ptz_service_dispatches_to_controller(hass):
     """A real `ptz` service call dispatches to the entity's controller."""
     from pytest_homeassistant_custom_component.common import MockEntityPlatform
 
-    from custom_components.aqara_lanlink.camera import _register_ptz_services
+    from custom_components.aqaralink.camera import _register_ptz_services
 
     ctrl = _RecordingController()
     cam = _camera_entity(ctrl)
     cam.entity_id = "camera.g350_test"
 
     platform = MockEntityPlatform(
-        hass, domain="camera", platform_name="aqara_lanlink",
+        hass, domain="camera", platform_name="aqaralink",
     )
     await platform.async_add_entities([cam])
     _register_ptz_services(hass, platform)
 
     await hass.services.async_call(
-        "aqara_lanlink", "ptz",
+        "aqaralink", "ptz",
         {"entity_id": "camera.g350_test", "command": "left"},
         blocking=True,
     )
@@ -470,12 +470,12 @@ async def test_second_entry_setup_does_not_double_register(hass):
     when a second config entry sets the camera platform up."""
     from pytest_homeassistant_custom_component.common import MockEntityPlatform
 
-    from custom_components.aqara_lanlink.camera import _register_ptz_services
+    from custom_components.aqaralink.camera import _register_ptz_services
 
-    platform = MockEntityPlatform(hass, platform_name="aqara_lanlink")
+    platform = MockEntityPlatform(hass, platform_name="aqaralink")
     _register_ptz_services(hass, platform)
     # Second call (e.g. a second hub config entry) must be a no-op, not raise.
-    platform2 = MockEntityPlatform(hass, platform_name="aqara_lanlink")
+    platform2 = MockEntityPlatform(hass, platform_name="aqaralink")
     _register_ptz_services(hass, platform2)
 
 

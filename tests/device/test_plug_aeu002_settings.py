@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.build_descriptors import (
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.build_descriptors import (
     build_setting_descriptors,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     ButtonDescriptor,
     NumberDescriptor,
     SelectDescriptor,

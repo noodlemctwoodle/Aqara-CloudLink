@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.camera.const import (
+from custom_components.aqaralink.device.camera.const import (
     AUDIO_PORT,
     TYPE_ACK,
     TYPE_START_VOICE,
 )
-from custom_components.aqara_lanlink.device.camera.protocol import build_packet
-from custom_components.aqara_lanlink.device.camera.talk import AqaraLanTalkClient
+from custom_components.aqaralink.device.camera.protocol import build_packet
+from custom_components.aqaralink.device.camera.talk import AqaraLanTalkClient
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def mock_tcp_connection():
         return mock_udp_transport, mock_udp_protocol
 
     with patch(
-        "custom_components.aqara_lanlink.device.camera.talk.asyncio.open_connection",
+        "custom_components.aqaralink.device.camera.talk.asyncio.open_connection",
         return_value=(reader, writer),
     ):
         with patch(
@@ -75,7 +75,7 @@ class TestAqaraLanTalkClient:
 
     async def test_connect_fails_on_timeout(self):
         with patch(
-            "custom_components.aqara_lanlink.device.camera.talk.asyncio.open_connection",
+            "custom_components.aqaralink.device.camera.talk.asyncio.open_connection",
             side_effect=asyncio.TimeoutError,
         ):
             client = AqaraLanTalkClient("10.1.20.150")

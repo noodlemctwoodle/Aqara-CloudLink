@@ -22,7 +22,7 @@ from pathlib import Path
 _INTEGRATION = (
     Path(__file__).resolve().parents[1]
     / "custom_components"
-    / "aqara_lanlink"
+    / "aqaralink"
 )
 
 

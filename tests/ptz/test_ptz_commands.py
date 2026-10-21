@@ -1,4 +1,4 @@
-from custom_components.aqara_lanlink.ptz import commands as c
+from custom_components.aqaralink.ptz import commands as c
 
 
 def test_iotypes():

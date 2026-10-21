@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink import gap_report
-from custom_components.aqara_lanlink.device import catalog, registry
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.gap_report import (
+from custom_components.aqaralink import gap_report
+from custom_components.aqaralink.device import catalog, registry
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.gap_report import (
     GapEntry,
     build_gap_report,
     build_gap_report_from_cloud,
@@ -83,7 +83,7 @@ def test_fn_id_collision_resolves_by_majority(monkeypatch, caplog):
     registry._TRAIT_INDEX[("lumi.test.oddplug", "3.133.32920")] = odd
     monkeypatch.setattr(registry, "_discovered", True)
 
-    with caplog.at_level("DEBUG", logger="custom_components.aqara_lanlink.gap_report"):
+    with caplog.at_level("DEBUG", logger="custom_components.aqaralink.gap_report"):
         gap_report._rebuild_fn_id_to_code()
         result = gap_report._fn_id_to_code()
 
@@ -147,7 +147,7 @@ def test_gap_report_proposes_v3_drops_propertyid_keying(monkeypatch):
 
 def test_propose_trait_spec_unknown_function_keeps_codes_none():
     """An unrecognised function_id leaves function_code / trait_code None."""
-    from custom_components.aqara_lanlink.gap_report import _propose_trait_spec
+    from custom_components.aqaralink.gap_report import _propose_trait_spec
     spec = _propose_trait_spec(
         wire_path="9.99.99999", value="1", model="lumi.test.x",
     )
@@ -162,7 +162,7 @@ def test_propose_trait_spec_unknown_function_keeps_codes_none():
 def test_propose_trait_spec_known_function_omits_unrecognised_marker(monkeypatch):
     """A recognised function_id drops the 'unrecognised_wire_path' marker."""
     _seed_fn_id(monkeypatch, fn_id=160, function_code="OccupancySensing")
-    from custom_components.aqara_lanlink.gap_report import _propose_trait_spec
+    from custom_components.aqaralink.gap_report import _propose_trait_spec
     spec = _propose_trait_spec(
         wire_path="2.160.33000", value="1", model="lumi.test.x",
     )
@@ -207,7 +207,7 @@ def test_entries_sorted_by_wire_path():
     ("", "string"),
 ])
 def test_infer_data_type(value, expected):
-    from custom_components.aqara_lanlink.gap_report import _infer_data_type
+    from custom_components.aqaralink.gap_report import _infer_data_type
     assert _infer_data_type(value) == expected
 
 
@@ -300,7 +300,7 @@ def test_adapter_trait_without_path_is_skipped():
 
 def test_propose_name_humanises_function_code():
     """Tier 1: a resolvable function_code is humanised into the name."""
-    from custom_components.aqara_lanlink import gap_report
+    from custom_components.aqaralink import gap_report
     name = gap_report._propose_name(
         wire_path="1.140.424242", function_code="BatteryPercentage",
     )
@@ -309,7 +309,7 @@ def test_propose_name_humanises_function_code():
 
 def test_propose_name_unrecognised_path_falls_back_to_auto():
     """Tier 2: no function_code -> stable auto_<wire_path> fallback."""
-    from custom_components.aqara_lanlink import gap_report
+    from custom_components.aqaralink import gap_report
     name = gap_report._propose_name(
         wire_path="2.132.20101", function_code=None,
     )

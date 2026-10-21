@@ -179,7 +179,7 @@ device.
 
 **Resolution:**
 
-1. Run the `aqara_lanlink.scan_device` service (see [services.md](services.md))
+1. Run the `aqaralink.scan_device` service (see [services.md](services.md))
    against each affected device listed in the Repair notification. The service
    queries the Aqara cloud for the device's current traits and produces a
    scan-review Repair.
@@ -212,7 +212,7 @@ name (such as `2.1.85`), or has an untranslated label in a foreign language.
 
 - **Uncatalogued trait.** The integration does not have a friendly label or
   type mapping for this wire path. A numeric name such as `2.1.85` means the
-  catalogue lacks the entry. Run `aqara_lanlink.scan_device` and accept the
+  catalogue lacks the entry. Run `aqaralink.scan_device` and accept the
   discovered trait, or add a manual entry via `overrides.py` -- see
   [adding-device-support.md](adding-device-support.md).
 
@@ -229,8 +229,8 @@ two-way audio (speaking back through the doorbell) does not work.
 
 **Cause:** The integration auto-registers a go2rtc stream for each camera.
 The stream name is derived from the camera's IP address:
-`aqara_lanlink_<camera-IP-with-dots-as-underscores>` (for example, a camera at
-`192.168.1.50` produces `aqara_lanlink_192_168_1_50`). If go2rtc is not
+`aqaralink_<camera-IP-with-dots-as-underscores>` (for example, a camera at
+`192.168.1.50` produces `aqaralink_192_168_1_50`). If go2rtc is not
 running or its configuration has not been reloaded, the stream will not be
 available.
 
@@ -243,7 +243,7 @@ Using `entity:` bypasses the backchannel and two-way audio will not function.
 1. Verify go2rtc is running and that its configuration file includes the
    stream written by this integration. A go2rtc restart may be needed after
    the integration first registers the stream.
-2. In your WebRTC card configuration, use `url: aqara_lanlink_192_168_1_50`
+2. In your WebRTC card configuration, use `url: aqaralink_192_168_1_50`
    (substituting the correct stream name for your camera's IP).
 3. For additional service options such as `play_audio_file`, see
    [services.md](services.md).
@@ -309,5 +309,5 @@ help diagnose the problem:
 logger:
   default: warning
   logs:
-    custom_components.aqara_lanlink: debug
+    custom_components.aqaralink: debug
 ```

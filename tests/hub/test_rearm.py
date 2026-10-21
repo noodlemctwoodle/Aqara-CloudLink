@@ -22,12 +22,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from custom_components.aqara_lanlink.const import (
+from custom_components.aqaralink.const import (
     CONF_ACTIVATION_HOST,
     CONF_ACTIVATION_PORT,
 )
-from custom_components.aqara_lanlink.hub import rearm
-from custom_components.aqara_lanlink.hub.rearm import RearmManager
+from custom_components.aqaralink.hub import rearm
+from custom_components.aqaralink.hub.rearm import RearmManager
 
 FP2_DID = "lumi1.fp2"
 FP2_HOST = "10.1.20.160"

@@ -1,9 +1,9 @@
 import asyncio
 import pytest
 from homeassistant.exceptions import HomeAssistantError
-from custom_components.aqara_lanlink.ptz.controller import PtzController
-from custom_components.aqara_lanlink.ptz import commands as c
-from custom_components.aqara_lanlink.ptz.session import PptzTimeout
+from custom_components.aqaralink.ptz.controller import PtzController
+from custom_components.aqaralink.ptz import commands as c
+from custom_components.aqaralink.ptz.session import PptzTimeout
 
 class FakeSession:
     def __init__(self): self.sent = []; self.ready = True; self.closed = False

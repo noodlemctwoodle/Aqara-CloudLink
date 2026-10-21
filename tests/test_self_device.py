@@ -24,18 +24,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.base import (
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.base import (
     Device,
     SelfDeviceContext,
 )
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor,
     SwitchDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.entity import AqaraEntity
-from custom_components.aqara_lanlink.hub.topology import classify_tunnel_host
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.entity import AqaraEntity
+from custom_components.aqaralink.hub.topology import classify_tunnel_host
 
 
 # ---------------------------------------------------------------------------
@@ -241,11 +241,11 @@ def test_subentry_path_did_property_unchanged():
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402
 
-from custom_components.aqara_lanlink import (  # noqa: E402
+from custom_components.aqaralink import (  # noqa: E402
     AqaraLanLinkRuntimeData,
     async_setup_entry,
 )
-from custom_components.aqara_lanlink.const import (  # noqa: E402
+from custom_components.aqaralink.const import (  # noqa: E402
     CONF_AQARA_REGION,
     CONF_AQARA_TOKEN,
     CONF_AQARA_USER_ID,
@@ -295,7 +295,7 @@ def _make_coordinator_mock_self() -> MagicMock:
 def patch_clientsession_self():
     """Avoid spawning aiohttp resolver threads in self-device tests."""
     with patch(
-        "custom_components.aqara_lanlink.async_get_clientsession",
+        "custom_components.aqaralink.async_get_clientsession",
         return_value=MagicMock(),
     ) as p:
         yield p
@@ -321,11 +321,11 @@ async def test_async_setup_entry_populates_self_device(
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch(
-        "custom_components.aqara_lanlink.OverlayStore",
+        "custom_components.aqaralink.OverlayStore",
         return_value=MagicMock(async_load=AsyncMock(return_value=MagicMock(
             traits_for_model=lambda m: {},
         ))),
@@ -340,7 +340,7 @@ async def test_async_setup_entry_populates_self_device(
     # self_device must be present
     assert entry.runtime_data.self_device is not None
     # It must be a Device (or subclass) with the hub's DID
-    from custom_components.aqara_lanlink.device.base import Device
+    from custom_components.aqaralink.device.base import Device
     assert isinstance(entry.runtime_data.self_device, Device)
     assert entry.runtime_data.self_device.did == hub_did
 
@@ -360,11 +360,11 @@ async def test_async_setup_entry_self_device_report_handler_registered(
     fake_cloud.query_device_traits = AsyncMock(return_value=[])
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch(
-        "custom_components.aqara_lanlink.OverlayStore",
+        "custom_components.aqaralink.OverlayStore",
         return_value=MagicMock(async_load=AsyncMock(return_value=MagicMock(
             traits_for_model=lambda m: {},
         ))),
@@ -413,11 +413,11 @@ async def test_async_setup_entry_self_device_graceful_on_empty_traits(
     # build_descriptors returns [] for lumi.gateway.m3 (not in catalogue),
     # which is the "empty traits" scenario this test exercises.
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch(
-        "custom_components.aqara_lanlink.OverlayStore",
+        "custom_components.aqaralink.OverlayStore",
         return_value=MagicMock(async_load=AsyncMock(return_value=MagicMock(
             traits_for_model=lambda m: {},
         ))),
@@ -434,7 +434,7 @@ async def test_async_setup_entry_self_device_graceful_on_empty_traits(
     # satisfies the graceful-degradation contract.
     self_device = entry.runtime_data.self_device
     if self_device is not None:
-        from custom_components.aqara_lanlink.device.base import Device
+        from custom_components.aqaralink.device.base import Device
         assert isinstance(self_device, Device)
         assert self_device.descriptors == []
 
@@ -470,16 +470,16 @@ async def test_async_setup_entry_self_device_graceful_on_exception(
         return []
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=fake_cloud,
+        "custom_components.aqaralink.AqaraCloudClient", return_value=fake_cloud,
     ), patch(
-        "custom_components.aqara_lanlink.OverlayStore",
+        "custom_components.aqaralink.OverlayStore",
         return_value=MagicMock(async_load=AsyncMock(return_value=MagicMock(
             traits_for_model=lambda m: {},
         ))),
     ), patch(
-        "custom_components.aqara_lanlink.build_descriptors",
+        "custom_components.aqaralink.build_descriptors",
         side_effect=_boom_on_hub_model,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -510,9 +510,9 @@ async def test_platform_setup_creates_self_device_number_entity() -> None:
     """
     from types import SimpleNamespace
 
-    from custom_components.aqara_lanlink.device.attrs import AttrSpec
-    from custom_components.aqara_lanlink.device.descriptors import NumberDescriptor
-    from custom_components.aqara_lanlink.number import async_setup_entry
+    from custom_components.aqaralink.device.attrs import AttrSpec
+    from custom_components.aqaralink.device.descriptors import NumberDescriptor
+    from custom_components.aqaralink.number import async_setup_entry
 
     hub_did = "lumi.self.test001"
     ctx = SelfDeviceContext(did=hub_did, model="lumi.gateway.m3")
@@ -631,11 +631,11 @@ async def test_on_topology_changed_updates_host_kind_to_hub(
     coord.lanlink_topology_dids = frozenset()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=MagicMock(),
+        "custom_components.aqaralink.AqaraCloudClient", return_value=MagicMock(),
     ), patch(
-        "custom_components.aqara_lanlink.registry.get_device_class",
+        "custom_components.aqaralink.registry.get_device_class",
         return_value=None,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -674,11 +674,11 @@ async def test_on_topology_changed_keeps_standalone_when_only_host_did(
     coord.lanlink_topology_dids = frozenset()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=MagicMock(),
+        "custom_components.aqaralink.AqaraCloudClient", return_value=MagicMock(),
     ), patch(
-        "custom_components.aqara_lanlink.registry.get_device_class",
+        "custom_components.aqaralink.registry.get_device_class",
         return_value=None,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -713,11 +713,11 @@ async def test_on_topology_changed_does_not_log_when_value_unchanged(
     coord.lanlink_topology_dids = frozenset()
 
     with patch(
-        "custom_components.aqara_lanlink.HubCoordinator", return_value=coord,
+        "custom_components.aqaralink.HubCoordinator", return_value=coord,
     ), patch(
-        "custom_components.aqara_lanlink.AqaraCloudClient", return_value=MagicMock(),
+        "custom_components.aqaralink.AqaraCloudClient", return_value=MagicMock(),
     ), patch(
-        "custom_components.aqara_lanlink.registry.get_device_class",
+        "custom_components.aqaralink.registry.get_device_class",
         return_value=None,
     ), patch.object(
         hass.config_entries, "async_forward_entry_setups",
@@ -730,7 +730,7 @@ async def test_on_topology_changed_does_not_log_when_value_unchanged(
 
     # First push: changes value to 'hub'; should log.
     child_did = "lumi3.CHILD002"
-    with caplog.at_level(logging.INFO, logger="custom_components.aqara_lanlink"):
+    with caplog.at_level(logging.INFO, logger="custom_components.aqaralink"):
         coord.on_topology_changed(frozenset({hub_did, child_did}))
     assert entry.runtime_data.host_kind == "hub"
     reclassify_logs = [
@@ -740,7 +740,7 @@ async def test_on_topology_changed_does_not_log_when_value_unchanged(
 
     # Second push: same classification ('hub'); must NOT add another log.
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger="custom_components.aqara_lanlink"):
+    with caplog.at_level(logging.INFO, logger="custom_components.aqaralink"):
         coord.on_topology_changed(frozenset({hub_did, child_did, "lumi3.CHILD003"}))
     assert entry.runtime_data.host_kind == "hub"
     reclassify_logs_2 = [

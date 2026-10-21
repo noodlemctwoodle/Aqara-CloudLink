@@ -6,8 +6,8 @@ import dataclasses
 
 import pytest
 
-from custom_components.aqara_lanlink.device.attrs import AttrSpec
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.attrs import AttrSpec
+from custom_components.aqaralink.device.descriptors import (
     AnyDescriptor,
     BinarySensorDescriptor,
     Effect,
@@ -20,7 +20,7 @@ from custom_components.aqara_lanlink.device.descriptors import (
     SwitchDescriptor,
     TextDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 # Synthetic catalog-free entries used by the tests below. They exercise the
 # fields the descriptors care about without touching the real catalogs.
@@ -326,7 +326,7 @@ def test_sensor_descriptor_normalized_unit_survives_replace():
 
 def test_any_descriptor_union_includes_all_descriptor_types():
     # AnyDescriptor is the runtime union; ensure it covers each type.
-    from custom_components.aqara_lanlink.device.descriptors import ButtonDescriptor
+    from custom_components.aqaralink.device.descriptors import ButtonDescriptor
     members = {
         BinarySensorDescriptor,
         ButtonDescriptor,

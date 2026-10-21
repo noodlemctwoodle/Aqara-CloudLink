@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import traits as traits_catalog
-from custom_components.aqara_lanlink.device.traits import (
+from custom_components.aqaralink.device import traits as traits_catalog
+from custom_components.aqaralink.device.traits import (
     TraitSpec,
     get,
     register_trait,
@@ -183,29 +183,29 @@ def test_traitspec_trait_id_preserves_hash_and_equality():
 
 class TestSynthesisSource:
     def test_synthesis_source_defaults_to_none(self):
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         ts = TraitSpec(id="0.3.85", name="Lux")
         assert ts.synthesis_source is None
 
     def test_synthesis_source_accepts_cloud_trait(self):
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         ts = TraitSpec(id="0.3.85", name="Lux", synthesis_source="cloud_trait")
         assert ts.synthesis_source == "cloud_trait"
 
     def test_synthesis_source_accepts_panel_synth(self):
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         ts = TraitSpec(id="6.154.32989", name="Light sensor", synthesis_source="panel_synth")
         assert ts.synthesis_source == "panel_synth"
 
     def test_synthesis_source_survives_dataclass_replace(self):
-        from custom_components.aqara_lanlink.device.traits import TraitSpec, replace
+        from custom_components.aqaralink.device.traits import TraitSpec, replace
         ts = TraitSpec(id="6.154.32989", name="Light", synthesis_source="panel_synth")
         renamed = replace(ts, name="Light sensor")
         assert renamed.synthesis_source == "panel_synth"
         assert renamed.name == "Light sensor"
 
     def test_existing_callers_without_synthesis_source_still_work(self):
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         ts = TraitSpec(
             id="0.1.85",
             name="Environment temperature",

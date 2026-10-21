@@ -19,17 +19,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.button import (
+from custom_components.aqaralink.button import (
     AqaraPtzDirectionButton,
     AqaraPtzStopButton,
     AqaraPtzZoomButton,
     async_setup_entry as button_setup,
 )
-from custom_components.aqara_lanlink.number import (
+from custom_components.aqaralink.number import (
     AqaraPtzZoomNumber,
     async_setup_entry as number_setup,
 )
-from custom_components.aqara_lanlink.select import (
+from custom_components.aqaralink.select import (
     AqaraPtzPresetSelect,
     async_setup_entry as select_setup,
 )

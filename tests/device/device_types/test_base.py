@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 from homeassistant.components.sensor import SensorDeviceClass
 
-from custom_components.aqara_lanlink.device.device_types._base import (
+from custom_components.aqaralink.device.device_types._base import (
     _default_precision,
 )
 

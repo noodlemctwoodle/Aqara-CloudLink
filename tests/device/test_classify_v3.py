@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from custom_components.aqara_lanlink.device.classify_v3 import classify_v3
-from custom_components.aqara_lanlink.device.descriptors import (
+from custom_components.aqaralink.device.classify_v3 import classify_v3
+from custom_components.aqaralink.device.descriptors import (
     BinarySensorDescriptor, EventDescriptor, SensorDescriptor,
 )
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 def _occupancy_trait() -> TraitSpec:
@@ -63,7 +63,7 @@ def test_unknown_device_type_logs_and_falls_back(caplog):
     emits per-trait primitive descriptors based on data_type."""
     endpoints = {2: {"deviceType": "ExoticUnseenDevice"}}
     traits = {"2.160.33000": _occupancy_trait()}
-    with caplog.at_level("WARNING", "custom_components.aqara_lanlink.device.classify_v3"):
+    with caplog.at_level("WARNING", "custom_components.aqaralink.device.classify_v3"):
         descs = classify_v3("lumi.test.x", endpoints, traits)
     assert "ExoticUnseenDevice" in caplog.text
     # _fallback emits a BinarySensor for a bool trait.

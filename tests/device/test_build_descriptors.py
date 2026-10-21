@@ -7,13 +7,13 @@ from unittest.mock import patch
 
 import pytest
 
-from custom_components.aqara_lanlink.device.build_descriptors import (
+from custom_components.aqaralink.device.build_descriptors import (
     build_descriptors,
 )
-from custom_components.aqara_lanlink.device.descriptors import BinarySensorDescriptor
-from custom_components.aqara_lanlink.device.overlay import Overlay
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.device import catalog
+from custom_components.aqaralink.device.descriptors import BinarySensorDescriptor
+from custom_components.aqaralink.device.overlay import Overlay
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.device import catalog
 
 
 # Parametrize across a representative slice of camera + non-camera models.
@@ -76,9 +76,9 @@ def test_build_descriptors_overlay_overrides_catalogue(monkeypatch):
     `docs/dev/superpowers/specs/2026-05-24-v3-classifier-design.md`,
     "device/overlay.py (modified)".
     """
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
-    from custom_components.aqara_lanlink.device.overlay import Overlay
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device.overlay import Overlay
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     model = "lumi.test.override"
     catalogue_spec = TraitSpec(
@@ -119,8 +119,8 @@ def test_build_descriptors_overlay_overrides_catalogue(monkeypatch):
 def test_build_descriptors_overlay_none_drops_catalogue_entry():
     """An overlay entry with spec=None removes the catalogue entry at that
     wire path."""
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     catalogue_spec = TraitSpec(
         id="2.160.33000", wire_path="2.160.33000",
@@ -139,7 +139,7 @@ def test_build_descriptors_does_not_call_cloud():
     """
     overlay = Overlay()
     with patch(
-        "custom_components.aqara_lanlink.hub.cloud_client.AqaraCloudClient",
+        "custom_components.aqaralink.hub.cloud_client.AqaraCloudClient",
         side_effect=AssertionError("build_descriptors must not call the cloud"),
     ):
         build_descriptors("lumi.camera.agl005", overlay)
@@ -160,9 +160,9 @@ def test_build_descriptors_uses_classify_v3(monkeypatch):
     been silently reverted via a merge conflict resolution. This test pins
     the contract.
     """
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
-    from custom_components.aqara_lanlink.device.overlay import Overlay
-    from custom_components.aqara_lanlink.device.traits import TraitSpec
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device.overlay import Overlay
+    from custom_components.aqaralink.device.traits import TraitSpec
 
     seen = {"classify_v3_called": False}
 
@@ -178,7 +178,7 @@ def test_build_descriptors_uses_classify_v3(monkeypatch):
 def test_trait_dict_from_spec_is_deleted():
     """The synthetic V1-trait-dict helper has no callers post-cut-over and
     must not exist anymore."""
-    from custom_components.aqara_lanlink.device import build_descriptors as bd_mod
+    from custom_components.aqaralink.device import build_descriptors as bd_mod
     assert not hasattr(bd_mod, "_trait_dict_from_spec")
 
 

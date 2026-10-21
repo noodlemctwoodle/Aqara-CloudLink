@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device import attrs as attrs_catalog
-from custom_components.aqara_lanlink.device.attrs import (
+from custom_components.aqaralink.device import attrs as attrs_catalog
+from custom_components.aqaralink.device.attrs import (
     AttrSpec,
     get,
     register_attr,

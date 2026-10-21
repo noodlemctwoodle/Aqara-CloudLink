@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.descriptors import EventDescriptor
-from custom_components.aqara_lanlink.device.traits import TraitSpec
-from custom_components.aqara_lanlink.event import AqaraEvent, async_setup_entry
+from custom_components.aqaralink.device.descriptors import EventDescriptor
+from custom_components.aqaralink.device.traits import TraitSpec
+from custom_components.aqaralink.event import AqaraEvent, async_setup_entry
 
 from .conftest import make_device, make_hub, make_subentry
 

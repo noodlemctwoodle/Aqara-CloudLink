@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import pathlib
 
-from custom_components.aqara_lanlink.device.camera.rtsp import (
+from custom_components.aqaralink.device.camera.rtsp import (
     parse_camera_rtsp_url,
 )
 

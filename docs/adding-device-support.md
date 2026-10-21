@@ -1,7 +1,7 @@
 # Adding device support
 
-Device support in `aqara_lanlink` is data-driven. Each supported model ships a
-per-model package under `custom_components/aqara_lanlink/device/models/<pkg>/`
+Device support in `aqaralink` is data-driven. Each supported model ships a
+per-model package under `custom_components/aqaralink/device/models/<pkg>/`
 containing a generated `data.json` (the V3 cloud spec for that model), a
 hand-edited `overrides.py` (the correction and extension layer), and a
 three-line `__init__.py` shim. The integration reads those packages at startup
@@ -46,7 +46,7 @@ through untranslated, a unit is incorrect, the entity type should be
 The fix goes in the model's `overrides.py`. Locate the file at:
 
 ```
-custom_components/aqara_lanlink/device/models/<model_dir>/overrides.py
+custom_components/aqaralink/device/models/<model_dir>/overrides.py
 ```
 
 `<model_dir>` matches the directory name shown in the catalogue index. The
@@ -72,14 +72,14 @@ value. There is no `base` variable available inside `overrides.py`, and
 importing the loader module from within it would cause a circular import, so
 do not attempt to derive values that way.
 The easiest way to get a correct starting `TraitSpec(...)` for any trait is to
-run the `aqara_lanlink.export_overlay` service - it emits exactly this shape -
+run the `aqaralink.export_overlay` service - it emits exactly this shape -
 then hand-edit the fields you want to change.
 
 ```python
 """Maintainer overrides for this model. Preserved across catalogue regen.
 Add entries here for V3 spec corrections, custom device_class, etc.
 """
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.traits import TraitSpec
 
 OVERRIDES: dict[str, TraitSpec | None] = {
     # Correct an untranslated enum label. wire_path is omitted; the loader
@@ -126,10 +126,10 @@ discover and validate locally using the overlay, then export the result into
 ### Stage 1: discover and validate
 
 1. In Home Assistant, go to Developer Tools > Actions and call the
-   `aqara_lanlink.scan_device` service against your device:
+   `aqaralink.scan_device` service against your device:
 
    ```yaml
-   action: aqara_lanlink.scan_device
+   action: aqaralink.scan_device
    data:
      device_id: <your device ID>
    ```
@@ -163,11 +163,11 @@ discover and validate locally using the overlay, then export the result into
 
 ### Stage 2: export and paste into overrides.py
 
-Once the entities look correct, call the `aqara_lanlink.export_overlay` service
+Once the entities look correct, call the `aqaralink.export_overlay` service
 to produce a ready-to-paste Python snippet:
 
 ```yaml
-action: aqara_lanlink.export_overlay
+action: aqaralink.export_overlay
 data:
   model: lumi.plug.aeu005   # optional; omit to export all models in the overlay
 ```
@@ -177,7 +177,7 @@ icon top-right, or Notifications in the sidebar). Its body is a Python block
 containing an `OVERRIDES` dict formatted for direct use in `overrides.py`.
 
 Copy the snippet and paste it into the model's
-`custom_components/aqara_lanlink/device/models/<model_dir>/overrides.py`,
+`custom_components/aqaralink/device/models/<model_dir>/overrides.py`,
 inside the existing `OVERRIDES` dict. Adjust any labels, units, or platform
 values that still need polishing.
 
@@ -250,7 +250,7 @@ model's `data.json` `settings` block.
 
 ### Step 1: discover the resource IDs
 
-Call `aqara_lanlink.scan_device` against the device (as in Tier B above). It
+Call `aqaralink.scan_device` against the device (as in Tier B above). It
 posts a Persistent Notification titled "Aqara LAN Link RID discovery:
 &lt;model&gt;" with a `RESOURCE_IDS` dict mapping each `wire_path` to the
 authoritative `resource_id` read from the device's `propertyId`:
@@ -272,7 +272,7 @@ app's behaviour and confirm the rid actuates on hardware.)
 Add a `SETTINGS_OVERRIDES` entry to the model's `overrides.py`:
 
 ```python
-from custom_components.aqara_lanlink.device.settings import SettingSpec
+from custom_components.aqaralink.device.settings import SettingSpec
 
 SETTINGS_OVERRIDES: dict[str, SettingSpec | None] = {
     "4.4.85": SettingSpec(
@@ -302,7 +302,7 @@ targets. A maintainer folds confirmed settings into the model's `data.json`
    improving. The issue gives reviewers context and lets others find the work.
 
 2. Edit the model's
-   `custom_components/aqara_lanlink/device/models/<model_dir>/overrides.py`
+   `custom_components/aqaralink/device/models/<model_dir>/overrides.py`
    with your corrections or additions.
 
 3. Run the test suite to confirm nothing is broken:
@@ -325,10 +325,10 @@ requirements - see [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
 | Path | Contents |
 |------|----------|
-| `custom_components/aqara_lanlink/device/models/` | All per-model packages |
-| `custom_components/aqara_lanlink/device/models/<pkg>/data.json` | Auto-generated V3 spec (do not hand-edit) |
-| `custom_components/aqara_lanlink/device/models/<pkg>/overrides.py` | Hand-edited correction and extension layer |
-| `custom_components/aqara_lanlink/device/models/<pkg>/__init__.py` | Three-line loader shim (auto-generated, do not edit) |
+| `custom_components/aqaralink/device/models/` | All per-model packages |
+| `custom_components/aqaralink/device/models/<pkg>/data.json` | Auto-generated V3 spec (do not hand-edit) |
+| `custom_components/aqaralink/device/models/<pkg>/overrides.py` | Hand-edited correction and extension layer |
+| `custom_components/aqaralink/device/models/<pkg>/__init__.py` | Three-line loader shim (auto-generated, do not edit) |
 | `docs/catalogue/index.md` | One-line summary for every catalogued model |
 | `docs/catalogue/by-model/<model_dir>.md` | Per-model trait reference |
 | `docs/catalogue/README.md` | Catalogue reference library overview |

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from custom_components.aqara_lanlink.device.base import _is_numeric_path
+from custom_components.aqaralink.device.base import _is_numeric_path
 
 
 @pytest.mark.parametrize("key, expected", [
@@ -23,7 +23,7 @@ def test_is_numeric_path(key, expected):
 
 from unittest.mock import MagicMock
 
-from custom_components.aqara_lanlink.device.base import Device
+from custom_components.aqaralink.device.base import Device
 
 
 class _StubReport:
@@ -44,7 +44,7 @@ def _make_device(model: str, observed_cache):
 
 
 def test_handle_report_records_numeric_paths(monkeypatch):
-    from custom_components.aqara_lanlink.device.observed_path_cache import (
+    from custom_components.aqaralink.device.observed_path_cache import (
         ObservedPathCache,
     )
 
@@ -61,7 +61,7 @@ def test_handle_report_records_numeric_paths(monkeypatch):
             storage[self._key] = data_func()
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     import asyncio
@@ -94,7 +94,7 @@ def test_handle_report_with_no_observed_cache_is_no_op():
 
 
 def test_handle_report_skips_record_when_model_empty(monkeypatch):
-    from custom_components.aqara_lanlink.device.observed_path_cache import (
+    from custom_components.aqaralink.device.observed_path_cache import (
         ObservedPathCache,
     )
 
@@ -107,7 +107,7 @@ def test_handle_report_skips_record_when_model_empty(monkeypatch):
             pass
 
     monkeypatch.setattr(
-        "custom_components.aqara_lanlink.device.observed_path_cache.Store",
+        "custom_components.aqaralink.device.observed_path_cache.Store",
         FakeStore,
     )
     import asyncio
@@ -122,7 +122,7 @@ async def test_handle_report_drops_paths_in_catalogue():
     """A pushed numeric path that the catalogue already covers does not
     enter ObservedPathCache."""
     from unittest.mock import MagicMock
-    from custom_components.aqara_lanlink.device.base import Device
+    from custom_components.aqaralink.device.base import Device
     from types import SimpleNamespace
 
     cache = MagicMock()
@@ -146,7 +146,7 @@ async def test_handle_report_records_unknown_paths():
     Repair notification can identify the specific paired device that
     emitted the path."""
     from unittest.mock import MagicMock
-    from custom_components.aqara_lanlink.device.base import Device
+    from custom_components.aqaralink.device.base import Device
     from types import SimpleNamespace
 
     cache = MagicMock()

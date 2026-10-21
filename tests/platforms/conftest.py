@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.aqara_lanlink.device.base import Device
+from custom_components.aqaralink.device.base import Device
 
 
 def make_subentry(

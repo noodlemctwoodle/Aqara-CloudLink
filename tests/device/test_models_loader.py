@@ -7,8 +7,8 @@ from textwrap import dedent
 
 import pytest
 
-from custom_components.aqara_lanlink.device.models import _loader
-from custom_components.aqara_lanlink.device.traits import TraitSpec
+from custom_components.aqaralink.device.models import _loader
+from custom_components.aqaralink.device.traits import TraitSpec
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def fake_package(tmp_path: Path) -> Path:
         },
     }))
     (pkg / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {}
     """).strip())
     return pkg
@@ -91,7 +91,7 @@ def test_load_propagates_diagnostic_fields(fake_package: Path):
 
 def test_overrides_replace_an_entry(fake_package: Path):
     (fake_package / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {
             "2.160.33000": TraitSpec(
                 id="2.160.33000", wire_path="2.160.33000",
@@ -110,7 +110,7 @@ def test_overrides_fill_wire_path_from_key_when_omitted(fake_package: Path):
     # A maintainer-added override that omits wire_path must still get one (from
     # the dict key) so subscribe+seed treats it identically to a data.json trait.
     (fake_package / "overrides.py").write_text(dedent('''
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {
             "2.143.32952": TraitSpec(
                 id="2.143.32952", name="Smile", data_type="bool",
@@ -125,7 +125,7 @@ def test_overrides_fill_wire_path_from_key_when_omitted(fake_package: Path):
 
 def test_overrides_preserve_explicit_wire_path(fake_package: Path):
     (fake_package / "overrides.py").write_text(dedent('''
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {
             "2.143.32952": TraitSpec(
                 id="2.143.32952", wire_path="9.9.99999", name="X", data_type="bool",
@@ -138,7 +138,7 @@ def test_overrides_preserve_explicit_wire_path(fake_package: Path):
 
 def test_overrides_none_drops_an_entry(fake_package: Path):
     (fake_package / "overrides.py").write_text(dedent("""
-        from custom_components.aqara_lanlink.device.traits import TraitSpec
+        from custom_components.aqaralink.device.traits import TraitSpec
         OVERRIDES: dict[str, TraitSpec | None] = {"2.160.33000": None}
     """).strip())
     data = _loader.load_model_data(fake_package)
