@@ -36,7 +36,6 @@
   },
   "config_subentries": {
     "device": {
-      "title": "Add a device",
       "step": {
         "user": {
           "title": "Add a device",
@@ -54,8 +53,7 @@
       },
       "entry_type": "Device",
       "initiate_flow": {
-        "user": "Add a device",
-        "reconfigure": "Reconfigure device"
+        "user": "Add a device"
       }
     }
   }

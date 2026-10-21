@@ -615,3 +615,30 @@ def test_entry_title_names_the_account():
     # A pasted user id and token give us no human-meaningful identifier.
     assert _entry_title("EU", {}) == "Aqara cloud (EU)"
     assert _entry_title("US", {CONF_EMAIL: "   "}) == "Aqara cloud (US)"
+
+
+def test_subentry_strings_declare_only_implemented_flows():
+    """initiate_flow must name only flows the handler implements.
+
+    Declaring one that does not exist stops Home Assistant using the block,
+    and the add button renders as a bare "+" with no label.
+    """
+    import json
+    import pathlib
+
+    from custom_components.aqara_cloudlink.config_flow import (
+        DeviceSubentryFlowHandler,
+    )
+
+    root = pathlib.Path(__file__).parent.parent / "custom_components/aqara_cloudlink"
+    for name in ["strings.json", "translations/en.json"]:
+        data = json.loads((root / name).read_text())
+        device = data["config_subentries"]["device"]
+        declared = set(device["initiate_flow"])
+        implemented = {
+            attr.removeprefix("async_step_")
+            for attr in dir(DeviceSubentryFlowHandler)
+            if attr.startswith("async_step_")
+        }
+        assert declared <= implemented, f"{name}: {declared - implemented}"
+        assert declared, f"{name}: no flow declared, button would be unlabelled"
