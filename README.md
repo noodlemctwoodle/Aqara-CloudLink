@@ -66,19 +66,15 @@ declined, correctly: Aqara-LANLink is local-push by design and says so in its
 README and architecture docs. Adding a cloud poller would have changed what that
 project is. Forking was the right answer, not a disagreement.
 
-**Which one should you run?**
+**Which one should you run?** For most people, **upstream**. AqaraLink is
+Aqara-LANLink with one thing bolted on, and that thing is a cloud poller its
+author deliberately chose not to have. If you do not need the handful of values
+the hub withholds, this fork offers you nothing the original does not already do
+- and the original is where the protocol expertise lives, is actively
+maintained, and stays entirely on your LAN.
 
-| | Aqara-LANLink | AqaraLink |
-|---|---|---|
-| Local push for everything the hub serves | yes | yes |
-| Values the hub does not serve over LANLink | absent | read from the cloud on an interval |
-| Cloud contact in steady state | none | one call per interval, and only if a model declares cloud-polled traits |
-| Origin | the original | forked from it |
-
-If local-only operation matters to you and you can live without the handful of
-values the hub withholds, **run upstream**. It is the original, it is the better
-fit for that goal, and it is actively maintained. Run AqaraLink if you
-specifically want those extra values and accept a cloud dependency for them.
+Run AqaraLink only if you specifically want those cloud-backed values and are
+happy with the trade that comes with them.
 
 Issues with AqaraLink belong on
 [this tracker](https://github.com/noodlemctwoodle/AqaraLink/issues), not
