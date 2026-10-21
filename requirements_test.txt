@@ -1,4 +1,2 @@
 # Test dependencies.
 pytest-homeassistant-custom-component==0.13.232
-ha-ffmpeg==3.2.2
-PyTurboJPEG==1.7.5

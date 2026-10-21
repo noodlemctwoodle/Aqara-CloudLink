@@ -1,24 +1,18 @@
-"""Generic sensor platform.
-
-One `AqaraSensor` per `SensorDescriptor` per device. SensorDescriptor is
-the rule-9 default fallback in the auto-derive pipeline, so it appears
-for any trait whose metadata doesn't fit the writable-platform rules.
-The entity is read-only: incoming reports update `native_value` via
-`descriptor.transform_in` (defaults to identity).
-"""
+"""Sensor platform for cloud-served Aqara values."""
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .device.descriptors import SensorDescriptor
-from .entity import AqaraEntity, build_descriptor_entities, setup_descriptor_platform
+from .const import DOMAIN, LANLINK_DOMAIN
+from .coordinator import AqaraCloudCoordinator, CloudDevice
+from .metrics import CloudMetric
 
 
 async def async_setup_entry(
@@ -26,103 +20,75 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Build a sensor entity per `SensorDescriptor` per device."""
-    await setup_descriptor_platform(
-        entry,
-        async_add_entities,
-        lambda hub, device, subentry: build_descriptor_entities(
-            hub, device, subentry, SensorDescriptor, AqaraSensor,
-        ),
+    """Create one sensor per metric per device."""
+    coordinator: AqaraCloudCoordinator = entry.runtime_data
+    async_add_entities(
+        AqaraCloudSensor(coordinator, device, metric)
+        for device in coordinator.devices
+        for metric in device.metrics
     )
 
 
-def _identity(raw: str) -> Any:
-    """Default wire->python coercion: pass-through string."""
-    return raw
+def _device_info(hass: HomeAssistant, device: CloudDevice) -> DeviceInfo:
+    """Attach to the Aqara-LANLink device for this DID when one exists.
 
+    Reusing that integration's identifiers puts these sensors on the same
+    device card as the locally-pushed ones, rather than creating a second
+    card for the same socket. When Aqara-LANLink is not installed, or has
+    not added this device, we register our own device instead.
 
-def _coerce_float(raw: str) -> Any:
-    """Wire->float, falling back to the raw string on parse failure."""
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return raw
-
-
-def _coerce_int(raw: str) -> Any:
-    """Wire->int, falling back to the raw string on parse failure."""
-    try:
-        return int(raw)
-    except (TypeError, ValueError):
-        return raw
-
-
-def _default_transform_for(descriptor: SensorDescriptor):
-    """Pick a default wire->python coercion based on descriptor metadata.
-
-    Numeric data types are coerced so HA's SensorEntity sees a real
-    number and renders it without firmware-precision artefacts (e.g.
-    weather_v1 emits "48.970000" for humidity; sensor_ht_agl02 emits
-    "56.08" -- both should display the same once they're floats).
-    Non-numeric / unknown / missing type info falls through to identity.
+    This is opportunistic only: nothing here requires Aqara-LANLink to be
+    present, and if its entry is later removed the device survives carrying
+    just our entities.
     """
-    data_type = None
-    if descriptor.trait is not None:
-        data_type = descriptor.trait.data_type
-    elif descriptor.attr is not None:
-        data_type = descriptor.attr.data_type
-    if data_type == "float":
-        return _coerce_float
-    if data_type == "int":
-        return _coerce_int
-    return _identity
+    existing = dr.async_get(hass).async_get_device(
+        identifiers={(LANLINK_DOMAIN, device.did)}
+    )
+    if existing is not None:
+        return DeviceInfo(identifiers={(LANLINK_DOMAIN, device.did)})
+
+    # No via_device: this integration is cloud-only and never registers the
+    # hub a device sits behind, so pointing at one would always dangle. Home
+    # Assistant warns on a non-existent via_device and stops allowing it in
+    # 2025.12. When Aqara-LANLink is installed it owns the device and models
+    # the hub relationship itself, which is the branch above.
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.did)},
+        name=device.name,
+        model=device.model,
+        manufacturer="Aqara",
+    )
 
 
-class AqaraSensor(AqaraEntity, SensorEntity):
-    """Read-only sensor backed by an attr or trait id."""
+class AqaraCloudSensor(CoordinatorEntity[AqaraCloudCoordinator], SensorEntity):
+    """One cloud-read value."""
 
-    def __init__(self, hub, device, subentry, descriptor: SensorDescriptor):
-        super().__init__(hub, device, subentry, descriptor)
-        self.entity_description = descriptor
-        self._attr_native_value = None
-        self._attr_extra_state_attributes = None
-        # ENUM sensors carry their options as a tuple on the descriptor (kept
-        # hashable so the descriptor works as a dict key). HA's options
-        # contract is list[str]; expose it as a list here.
-        if descriptor.options is not None:
-            self._attr_options = list(descriptor.options)
+    _attr_has_entity_name = True
 
-    def apply_value(self, raw: str) -> None:
-        """Coerce the wire value via `descriptor.transform_in`, optionally apply scale."""
-        # Empty string means "no reading available" -- never a valid numeric
-        # value, and on a numeric sensor (unit set) HA rejects the entity.
-        # Treat it as a None state so the entity registers cleanly and
-        # transitions to a real value on the next push.
-        if raw == "":
-            self._attr_native_value = None
-            self._attr_extra_state_attributes = None
-            self.write_state_if_added()
-            return
-        transform = self.descriptor.transform_in or _default_transform_for(
-            self.descriptor,
-        )
-        value = transform(raw)
-        scale = getattr(self.entity_description, "scale", None)
-        if scale is not None:
-            try:
-                value = float(value) * scale
-            except (TypeError, ValueError):
-                pass  # non-numeric transform output; leave value untransformed
-        if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
-            # HA rejects state strings over MAX_LENGTH_STATE_STATE (255).
-            # Keep the full value reachable as an attribute; truncate the
-            # state to exactly the limit (254 chars + a 1-codepoint ellipsis).
-            self._attr_extra_state_attributes = {"full_value": value}
-            value = value[: MAX_LENGTH_STATE_STATE - 1] + "…"
-        else:
-            self._attr_extra_state_attributes = None
-        self._attr_native_value = value
-        self.write_state_if_added()
+    def __init__(
+        self,
+        coordinator: AqaraCloudCoordinator,
+        device: CloudDevice,
+        metric: CloudMetric,
+    ) -> None:
+        """Bind this entity to one device and one metric."""
+        super().__init__(coordinator)
+        self._device = device
+        self._metric = metric
 
+        self._attr_unique_id = f"{DOMAIN}_{device.did}_{metric.key}"
+        self._attr_name = metric.name
+        self._attr_device_class = metric.device_class
+        self._attr_native_unit_of_measurement = metric.unit
+        self._attr_state_class = metric.state_class
+        self._attr_device_info = _device_info(coordinator.hass, device)
 
-__all__ = ["AqaraSensor", "async_setup_entry"]
+    @property
+    def native_value(self) -> float | None:
+        """Latest polled value, or None if this cycle did not return one."""
+        return self.coordinator.data.get(self._device.did, {}).get(self._metric.key)
+
+    @property
+    def available(self) -> bool:
+        """Available only while the last poll produced this value."""
+        return super().available and self.native_value is not None

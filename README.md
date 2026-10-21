@@ -1,181 +1,85 @@
 <h1 align="center">AqaraLink</h1>
 
 <p align="center">
-  A Home Assistant integration for Aqara hubs, their sub-devices and cameras -
-  local where the hub allows it, cloud-backed where it does not.
+  Home Assistant sensors for Aqara values that only the cloud serves.
 </p>
 
 ---
 
 ## What this is
 
-Aqara hubs speak a private protocol, **LANLink**, over the local network. Home
-Assistant can talk it directly: state is pushed from the hub over a persistent
-encrypted TCP connection, and commands are written back the same way, with no
-round-trip through Aqara's servers.
+Aqara hubs serve most of a device's state over the local network, and
+[Aqara-LANLink](https://github.com/absent42/Aqara-LANLink) does an excellent job
+of reading it. But some values the Aqara Home app displays are never served
+locally at all — the hub does not answer for them in any addressing form.
 
-That protocol was reverse-engineered by Dan Gibson in
-[absent42/Aqara-LANLink](https://github.com/absent42/Aqara-LANLink). AqaraLink
-is a fork of that project. **Every line of the LANLink and P2P protocol work is
-his.** See [Relationship to Aqara-LANLink](#relationship-to-aqara-lanlink) below
-for what is his, what is new here, and which project you should actually be
-running.
+AqaraLink reads those from Aqara's cloud and exposes them as ordinary Home
+Assistant sensors. That is all it does.
 
-What AqaraLink adds is a second source. Some values the Aqara Home app shows
-simply are not served over LANLink at all - the hub does not answer for them in
-any addressing form. AqaraLink reads those from Aqara's cloud on an interval, so
-the entity exists and holds a value instead of being absent or permanently
-unknown. Everything the hub does serve stays local and pushed, exactly as
-before.
+It is **not** a replacement for Aqara-LANLink and does not speak the LANLink
+protocol. It makes no local connection to your hub, opens no tunnel, and holds
+no LANLink session. Run it alongside Aqara-LANLink, or on its own — neither is
+required by the other.
 
-> **This replaces `aqara_lanlink`. Do not run both.** The hub allows one LANLink
-> session per Aqara account, so the two integrations will fight over it and
-> displace each other. Remove one before adding the other.
-
-Aqara does not endorse or support this integration. The protocol was
-reverse-engineered from the Aqara app and hub firmware, and a firmware update
-may break it without warning.
-
-**AqaraLink is early. Treat it as beta.**
+> **Early software.** One device family is covered so far. Adding more is a
+> table entry; see [Adding a model](#adding-a-model).
 
 ---
 
-## Relationship to Aqara-LANLink
+## What you get
 
-This section exists so there is no confusion about who did what.
+Today, for the **Wall Outlet H2** (`lumi.plug.aeu002`), eight sensors per
+device:
 
-**Upstream's work, not ours.** The LANLink tunnel (ECDH key exchange, AES
-encryption, framing, check-in, session lifecycle), the P2P camera protocol, the
-device catalogue of ~379 models, the trait and override system, the config and
-subentry flows, the camera, PTZ and go2rtc work, the Repairs integration, and
-the documentation that explains all of it. AqaraLink inherits the lot
-essentially unchanged. If something here works well locally, that is Dan's
-doing.
+| | Socket 1 | Socket 2 |
+|---|---|---|
+| Power (W) | yes | yes |
+| Energy, cumulative (Wh) | yes | yes |
+| Energy today (Wh) | yes | yes |
+| Energy this month (Wh) | yes | yes |
 
-**What this fork adds.** A `cloud_poll` flag on a trait, a cloud client method
-for the app's `view/data/query/new` endpoint, and a polling loop that delivers
-those values through the same path a LANLink push would take. Plus the model
-overrides that use it. That is the whole delta.
+The H2 meters each socket separately and the app shows it, but the hub serves
+only the device totals over LANLink. Probing confirmed there is no local path:
+the per-outlet resources are `EndpointLabel` metadata rather than measurements,
+the obvious per-endpoint trait addresses do not exist, and the legacy resource
+ids the app uses get no reply — bare or instance-suffixed, across every
+endpoint and instance index tried.
 
-**Why it is a fork and not a pull request.** It was offered upstream and
-declined, correctly: Aqara-LANLink is local-push by design and says so in its
-README and architecture docs. Adding a cloud poller would have changed what that
-project is. Forking was the right answer, not a disagreement.
-
-**Which one should you run?** For most people, **upstream**. AqaraLink is
-Aqara-LANLink with one thing bolted on, and that thing is a cloud poller its
-author deliberately chose not to have. If you do not need the handful of values
-the hub withholds, this fork offers you nothing the original does not already do
-- and the original is where the protocol expertise lives, is actively
-maintained, and stays entirely on your LAN.
-
-Run AqaraLink only if you specifically want those cloud-backed values and are
-happy with the trade that comes with them.
-
-Issues with AqaraLink belong on
-[this tracker](https://github.com/noodlemctwoodle/AqaraLink/issues), not
-upstream's - please do not send our bugs to Dan. Fixes made here that are not
-cloud-related are offered back upstream where they apply.
-
-Licensed MIT, as upstream is. See [LICENSE](LICENSE); the original copyright
-notice is retained.
+Socket 1 shares an endpoint with the USB-C port, so its figures include USB
+draw. The two sockets sum to slightly under the device total; the difference is
+the USB port plus the plug's own consumption.
 
 ---
 
 ## How it works
 
-AqaraLink opens an encrypted tunnel from Home Assistant to an Aqara hub using
-the LANLink protocol. Once that tunnel is up, sub-device state changes and
-commands run over the LAN: the hub relays them to the sub-devices and pushes
-state back, with no Aqara server in the path.
+On setup, AqaraLink logs in to Aqara's regional API, lists the devices on your
+account, and keeps the ones whose model it has metrics for. Everything else is
+ignored.
 
-The cloud is still involved, and it is worth being precise about where:
+Every 60 seconds it reads those values with
+`POST /app/v1.0/lumi/app/view/data/query/new` — the call the app's own device
+pages make. Current values use the present-value method; today and this-month
+totals use the statistics method, and are the cloud's own aggregates, the same
+numbers the app shows.
 
-- **At setup.** Adding a hub makes a small number of HTTPS calls to Aqara's
-  regional API: a login that exchanges credentials for a session token,
-  sub-device enumeration to build the device picker, and a light-effects fetch.
-- **At every restart and reconnect.** The local push subscription is *armed
-  through the cloud*, not over LANLink. Home Assistant re-arms it and seeds
-  current values on each setup or reload. If Aqara's cloud is unreachable at
-  that moment, devices come up without seeded state and pushes do not start
-  until the next successful re-arm. Once armed, cloud availability has no
-  further effect on state or control.
-- **On the poll interval, for cloud-polled traits only.** Models that declare
-  `cloud_poll` traits get one additional cloud call per interval (60 seconds by
-  default). Models that declare none make no such calls at all.
+Only the session token is stored. Your password is not retained.
 
-Only a session token is stored in the config entry. Your password is not
-retained.
-
-For the protocol and session lifecycle in detail, see
-[docs/architecture.md](docs/architecture.md).
-
----
-
-## Features
-
-- **~379 Aqara device models catalogued**, rendering with friendly entity names,
-  labelled enum options and correct units on add.
-- **Local push in steady state.** Device state arrives over the persistent
-  encrypted LANLink tunnel and control is written back the same way, with no
-  cloud round-trip once the subscription is armed.
-- **Cloud-backed values where LANLink has none.** Traits marked `cloud_poll` in
-  a model's overrides are read from Aqara's cloud on an interval and delivered
-  through the same handler a LANLink push uses, so the entities behave normally.
-  Nothing else is affected: a model with no such traits never triggers a poll.
-- **Hub clusters and multiple regions.** Several hubs, including hubs bound to
-  different Aqara regions, and Zigbee devices parented to a peer hub rather than
-  the one Home Assistant connects to.
-- **Eleven entity platforms** - sensor, binary sensor, switch, light, number,
-  select, button, event, text, time and camera - derived from each device's
-  catalogue entry.
-- **Local device settings.** Child lock, indicator light, button mode,
-  power-off memory, max power, find and restart, and similar, exposed as
-  entities and written fully locally over LANLink by resource ID.
-- **Cameras and doorbells.** RTSP streaming via go2rtc, doorbell ring events,
-  motion, occupancy and gesture events, and two-way audio through the go2rtc
-  backchannel.
-- **Local camera PTZ.** Pan, tilt, zoom and saved-position presets as buttons, a
-  preset selector and an `aqaralink.ptz` action.
-- **Rich lights.** Brightness, colour temperature and full colour fused into one
-  light entity, with Aqara and user-created dynamic and static effects in the
-  effect picker.
-- **Self-healing.** Automatic reconnect, push-liveness recovery, and Home
-  Assistant Repairs that flag stalled hubs or newly discovered capabilities.
-- **Contributor tooling.** Per-model overrides for labels, entity types and
-  units, plus a `scan_device` action that exports both new traits and
-  resource-ID pairs ready for a pull request.
-
-### Worked example: Wall Outlet H2 per-socket metering
-
-`lumi.plug.aeu002` meters each socket separately and the Aqara app shows it, but
-the hub only serves the device totals over LANLink. Probing confirmed there is
-no local path: the per-outlet resources are `EndpointLabel` metadata rather than
-measurements, the obvious per-endpoint trait addresses do not exist, and the
-legacy resource IDs the app uses get no reply - bare or instance-suffixed,
-across every endpoint and instance index tried.
-
-AqaraLink declares those legacy resource IDs as `cloud_poll` traits, giving
-eight extra sensors per device: power, cumulative energy, energy today and
-energy this month, for each of the two sockets. The same overrides drop
-`Current voltage`, which this hardware does not measure - it reads 0 V under a
-1.6 kW load and is never reported.
+**Device cards.** If Aqara-LANLink is installed and already owns a device,
+AqaraLink puts its sensors on that same device card rather than creating a
+duplicate — the cloud readings sit alongside the local ones. If it is not
+installed, AqaraLink registers its own device. This is opportunistic only:
+nothing requires Aqara-LANLink to be present, and if you later remove it the
+device survives carrying the cloud sensors.
 
 ---
 
 ## Requirements
 
-- Home Assistant **2025.4.0** or later.
-- An Aqara hub supporting LAN Control. Tested on the **M3** (firmware
-  `4.5.50_0019` / `4.5.60_0017`) and the **M200** as a cluster member; other
-  `lumi1.` hubs may work but are unvalidated.
-- **Hub Cluster** and **LAN Control** enabled on the hub, from your profile
-  settings in the Aqara Home app. Without them the hub refuses the encrypted
-  session.
-- An Aqara account (email and password), or a user ID and session token obtained
-  elsewhere. Only the resulting token is stored.
-- go2rtc for camera streaming and two-way audio. Optional; declared as an
-  `after_dependency`.
+- Home Assistant 2025.4.0 or later.
+- An Aqara account, and devices on it that this integration has metrics for.
+
+No hub configuration, no LAN access, no go2rtc.
 
 ---
 
@@ -185,130 +89,72 @@ energy this month, for each of the two sockets. The same overrides drop
 
 [![Open HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=noodlemctwoodle&repository=AqaraLink&category=Integration)
 
-AqaraLink is not in the default HACS catalogue. Add it as a custom repository:
-
-1. Click the badge above and confirm the prompt. Or, in HACS, open the
-   three-dot menu, choose **Custom repositories**, paste
-   `https://github.com/noodlemctwoodle/AqaraLink` and select **Integration** as
-   the type.
-2. Find **AqaraLink** in the list and click **Download**.
+1. Click the badge above, or in HACS open the three-dot menu, choose **Custom
+   repositories**, paste `https://github.com/noodlemctwoodle/AqaraLink` and
+   select **Integration**.
+2. Find **AqaraLink** and click **Download**.
 3. Restart Home Assistant.
 
 ### Manual
 
-Copy `custom_components/aqaralink/` into your Home Assistant configuration
-directory and restart:
+Copy `custom_components/aqaralink/` into your configuration directory and
+restart.
 
+### Configure
+
+**Settings > Devices & Services > Add Integration**, search for **AqaraLink**,
+and enter your Aqara email, password and region. Supported devices on the
+account are added automatically.
+
+---
+
+## Adding a model
+
+Everything model-specific lives in one table,
+[`metrics.py`](custom_components/aqaralink/metrics.py). Nothing else in the
+integration is model-aware.
+
+To add a device, add its model string with the resource ids the cloud serves
+for it:
+
+```python
+METRICS: dict[str, tuple[CloudMetric, ...]] = {
+    "lumi.your.model": (
+        CloudMetric(
+            key="0.17.85",
+            name="Socket 1 energy",
+            device_class=SensorDeviceClass.ENERGY,
+            unit=UnitOfEnergy.WATT_HOUR,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+}
 ```
-<config>/
-  custom_components/
-    aqaralink/
-      __init__.py
-      manifest.json
-      ...
-```
 
-### Migrating from `aqara_lanlink`
+Keys are legacy resource ids (`0.17.85`) or the app's statistics keys
+(`1d_0_0.17.85` for today, `month_0_0.17.85` for this month). Keys containing
+an underscore are read with the statistics method automatically.
 
-Remove the `aqara_lanlink` config entry and delete its directory from
-`custom_components/` before adding AqaraLink. The two cannot share the hub's
-single LANLink session. Entity IDs are not carried over, so expect to re-add
-your devices and fix up any automations that referenced the old entities.
+Finding the resource ids for a device means watching what the Aqara app
+requests when you open its page. Pull requests welcome, ideally with a note on
+how you confirmed the values.
 
 ---
 
-## Configuration
+## Credits
 
-Setup is two steps: add the hub, then add devices as sub-entries.
+The cloud client in [`cloud.py`](custom_components/aqaralink/cloud.py) is
+derived from `hub/cloud_client.py` in
+[absent42/Aqara-LANLink](https://github.com/absent42/Aqara-LANLink) by Dan
+Gibson, MIT licensed. The protocol reverse engineering — request signing,
+region handling, password encryption and endpoint semantics — is his work.
+It is reduced here to the four calls this integration needs.
 
-### 1. Add the hub
-
-1. **Settings > Devices & Services > Add Integration**, then search for
-   **AqaraLink**.
-2. Click **Add hub**. Hubs on the same LAN appear in a discovered list. If
-   yours does not, choose **Enter manually** and give its IP address and DID
-   (shown in the Aqara app under hub settings; it starts with `lumi1.`).
-3. On the credentials step, enter either your Aqara account email, password and
-   region, or a user ID and token pasted directly to skip the cloud login.
-4. Confirm the hub details.
-
-### 2. Add devices
-
-1. On the integration card, click **Add a device**.
-2. AqaraLink queries the cloud for sub-devices paired to this hub and lists the
-   supported ones. Pick one and submit. One device per run; rerun to add more.
-3. Cameras prompt for RTSP credentials in a follow-up step.
-4. Reload the integration to create the entities, or restart Home Assistant if
-   you added a camera with a go2rtc stream.
-
-If the stored token stops being accepted, Home Assistant raises a
-re-authentication prompt on the integration card; the entry is updated and
-reloaded automatically once you supply fresh credentials.
-
----
-
-## Device support
-
-Around 379 models are catalogued. Catalogued devices come up with friendly
-names, labelled options and correct units straight away. Uncatalogued devices
-may still work through auto-discovery, with entity names derived from the wire
-trait ID and raw enum values instead of friendly labels.
-
-The live list is at [docs/catalogue/index.md](docs/catalogue/index.md).
-
-Most catalogued models are untested against real hardware and may produce
-incorrect or non-functioning entities. The override mechanism exists to correct
-them, and the catalogue improves through contributions.
-
-Coverage is bounded by what Aqara's protocol exposes per model, so this does not
-claim the full Aqara feature set. To add or improve a device, see
-[docs/adding-device-support.md](docs/adding-device-support.md). If a device is
-added but missing traits you expect, run the `scan_device` action rather than
-removing and re-adding it.
-
----
-
-## Actions
-
-| Action | Purpose |
-|---|---|
-| `aqaralink.scan_device` | Re-scan a device for traits and resource IDs, and export what it finds |
-| `aqaralink.export_overlay` | Export a model overlay ready for a pull request |
-| `aqaralink.ptz` | Drive camera pan, tilt, zoom and presets from one call |
-| `aqaralink.play_audio_file` | Play an audio file through a device that supports it |
-
-See [docs/services.md](docs/services.md) for parameters.
-
----
-
-## Documentation
-
-- [docs/architecture.md](docs/architecture.md) - protocol and session lifecycle
-- [docs/catalogue/index.md](docs/catalogue/index.md) - supported device list
-- [docs/overrides.md](docs/overrides.md) - per-model overrides, including
-  `cloud_poll`
-- [docs/adding-device-support.md](docs/adding-device-support.md) - adding or
-  improving a device
-- [docs/services.md](docs/services.md) - available actions
-- [docs/ptz.md](docs/ptz.md) - camera PTZ setup
-- [docs/faq.md](docs/faq.md) - frequently asked questions
-- [docs/troubleshooting.md](docs/troubleshooting.md) - troubleshooting and known
-  limitations
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a device, author traits,
-write tests and open a pull request.
-
-Contributions that improve local behaviour are welcome here, and are worth
-offering to [upstream](https://github.com/absent42/Aqara-LANLink) too, where
-they will reach more people.
+If you want local push for Aqara devices, that is the project to use. This one
+only fills in what it cannot reach.
 
 ---
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Copyright 2026 Dan Gibson for the original work;
-the fork's additions are copyright 2026 Toby Goulden.
+MIT. See [LICENSE](LICENSE).

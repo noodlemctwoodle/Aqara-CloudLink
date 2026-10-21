@@ -1,8 +1,4 @@
-"""Shared fixtures for Aqara LANLink tests.
-
-pytest_plugins is declared in the project-root conftest.py (required by
-pytest - the directive is only honored at rootdir).
-"""
+"""Shared fixtures for AqaraLink tests."""
 
 from __future__ import annotations
 

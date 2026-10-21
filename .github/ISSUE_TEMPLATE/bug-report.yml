@@ -1,5 +1,5 @@
 name: Bug report
-description: Report something that is not working as expected in the Aqara LANLink integration.
+description: Report something not working as expected in AqaraLink.
 labels:
   - bug
   - triage
@@ -7,47 +7,24 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before opening a bug report, please read the troubleshooting guide:
-        https://github.com/noodlemctwoodle/AqaraLink/blob/main/docs/troubleshooting.md
-
-        It covers the most common problems (cannot connect, no state updates,
-        missing or oddly-named entities, cameras and two-way audio, PTZ, and
-        re-authentication) with their causes and fixes, and already known issues. 
-        Many reports are resolved there.
-
-        For questions, configuration help, or general discussion, please use
-        Discussions rather than an issue.
-
-  - type: checkboxes
-    id: preflight
-    attributes:
-      label: Before submitting
-      options:
-        - label: I have read docs/troubleshooting.md and my problem is not covered there.
-          required: true
-        - label: I have searched existing issues and this is not a duplicate.
-          required: true
+        This integration only reads values from the Aqara cloud. If the problem
+        is with locally-pushed state, device control, or cameras, it belongs to
+        [Aqara-LANLink](https://github.com/absent42/Aqara-LANLink) rather than
+        here.
 
   - type: textarea
-    id: description
+    id: what_happened
     attributes:
-      label: What happened
-      description: >
-        A clear description of the bug, including what you expected to happen
-        and what actually happened instead.
-      placeholder: "When I ... I expected ... but instead ..."
+      label: What happened?
+      description: What you expected, and what you got instead.
     validations:
       required: true
 
-  - type: textarea
-    id: reproduction
+  - type: input
+    id: version
     attributes:
-      label: Steps to reproduce
-      description: The exact steps that trigger the problem.
-      placeholder: |
-        1. Go to ...
-        2. Do ...
-        3. Observe ...
+      label: AqaraLink version
+      description: From HACS, or the `version` field in `manifest.json`.
     validations:
       required: true
 
@@ -55,73 +32,50 @@ body:
     id: ha_version
     attributes:
       label: Home Assistant version
-      description: Settings > About (e.g. 2025.6.1).
-      placeholder: "2025.6.1"
+      placeholder: "2025.4.0"
     validations:
       required: true
 
   - type: input
-    id: integration_version
-    attributes:
-      label: Integration version
-      description: >
-        The Aqara LANLink version (HACS, or the "version" field in
-        custom_components/aqaralink/manifest.json).
-      placeholder: "0.1.0"
-    validations:
-      required: true
-
-  - type: input
-    id: hub_model_firmware
-    attributes:
-      label: Aqara hub model and firmware
-      description: >
-        The hub model and its firmware version, both shown in the Aqara app
-        under the hub's settings (e.g. "M3, fw 4.3.6").
-      placeholder: "M3, fw 4.x.x"
-    validations:
-      required: true
-
-  - type: input
-    id: device_model_firmware
-    attributes:
-      label: Affected Aqara device model and firmware
-      description: >
-        The model string (e.g. lumi.camera.agl010) and firmware version of the
-        device the bug is about. Leave blank only if the bug is hub-wide.
-      placeholder: "lumi.camera.agl010, fw 1.x.x"
-
-  - type: dropdown
     id: region
     attributes:
-      label: Aqara server region
-      description: The region of your Aqara account.
+      label: Aqara region
+      placeholder: EU
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: Device model
+      description: The Aqara model string the problem is about, if it is one device.
+      placeholder: lumi.plug.aeu002
+
+  - type: dropdown
+    id: lanlink
+    attributes:
+      label: Is Aqara-LANLink also installed?
+      description: >
+        AqaraLink attaches its sensors to that integration's device cards when
+        it is present, so it is worth knowing either way.
       options:
-        - China Mainland (CN)
-        - Europe (EU)
-        - United States (US)
-        - Korea (KR)
-        - Russia (RU)
-        - Hong Kong / Macau / Taiwan (HMT)
-        - Other
+        - "Yes"
+        - "No"
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
+      label: Logs
       description: >
-        Home Assistant logs for the aqaralink integration. Enable debug
-        logging (Settings > Devices & Services > Aqara LANLink > Enable debug
-        logging) to capture more detail. Redact any account identifiers if you
-        prefer.
-      render: text
+        Relevant lines from Home Assistant's log. Enable debug with:
 
-  - type: textarea
-    id: additional_context
-    attributes:
-      label: Additional context
-      description: >
-        Anything else that may help: when it started, whether it is
-        intermittent, network setup, screenshots, or related Repair issues.
+        ```yaml
+        logger:
+          logs:
+            custom_components.aqaralink: debug
+        ```
+
+        Redact your token and user id before pasting.
+      render: text
