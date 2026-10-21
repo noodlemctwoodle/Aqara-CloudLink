@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/images/aqaralink-icon.png" alt="AqaraLink" width="160">
-</p>
-
 <h1 align="center">AqaraLink</h1>
 
 <p align="center">
