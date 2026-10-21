@@ -25,7 +25,7 @@ Aqara does not endorse or support this integration. The LANLink protocol was rev
 - **~379 Aqara device models supported** out of the box, from a shipped device catalogue.
 - **Local push for everything the hub serves** - device state is pushed from the hub over a persistent encrypted LANLink tunnel, with no cloud round-trip.
 - **Cloud-backed values where LANLink has none** - e.g. per-socket power and energy on the Wall Outlet H2 (`lumi.plug.aeu002`), which the hub only exposes as a device total. Marked `cloud_poll` in the device catalogue and polled on an interval; everything else stays local.
-- **Multiple Aqara hubs in a cluster**, and mutliple hubs bound to different regions.
+- **Multiple Aqara hubs in a cluster**, and multiple hubs bound to different regions.
 - **Multiple entity types** - switches, sensors, binary sensors, lights, numbers, selects, buttons, and events are derived from each device's catalogue with names, values and labels.
 - **Local device settings** - sub-device configuration settings (child lock, indicator light, button mode, power-off memory, max power, find/restart etc) are exposed as switch, select, number, text, and button entities and written fully locally over LANLink by resource ID.
 - **Cameras and doorbells** - RTSP streaming via go2rtc, doorbell ring events, motion/occupancy/gesture etc detection events and sensors, and two-way audio (talk-back) through the go2rtc backchannel.
@@ -77,16 +77,16 @@ For a deeper look at the workings and protocol details, see
 
 ### HACS (custom repository)
 
-[![Open HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=absent42&repository=Aqara-LANLink&category=Integration)
+[![Open HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=noodlemctwoodle&repository=AqaraLink&category=Integration)
 
 The integration is not yet in the default HACS catalogue. Add it as a custom
 repository:
 
 1. Click the **Open HACS** button above and confirm the custom repository
    prompt. Alternatively, in HACS open the three-dot menu, choose **Custom
-   repositories**, paste `https://github.com/absent42/Aqara-LANLink`, and
+   repositories**, paste `https://github.com/noodlemctwoodle/AqaraLink`, and
    select **Integration** as the type.
-2. Search HACS for "Aqara LANLink" and install it.
+2. Find "AqaraLink" in the list and click **Download**.
 3. Restart Home Assistant.
 4. Proceed to Configuration below.
 
@@ -115,7 +115,7 @@ sub-entries.
 ### Step 1 - Add the hub
 
 1. Go to **Settings > Devices & Services > Add Integration**.
-2. Search for and select **Aqara LANLink**.
+2. Search for and select **AqaraLink**.
 3. Click **Add hub**. If your hub is on the same LAN as Home Assistant it will appear in a
    discovered list. Select it. If it does not appear, select **Enter manually**
    and type the hub's IP address and DID (visible in the
@@ -200,7 +200,7 @@ Full documentation lives under [docs/](docs/README.md):
 - [docs/adding-device-support.md](docs/adding-device-support.md) - adding or
   improving a device
 - [docs/faq.md](docs/faq.md) - frequently asked questions
-- [docs/troubleshooting.md](docs/troubleshooting.md) - troubleshooting and known limimitations
+- [docs/troubleshooting.md](docs/troubleshooting.md) - troubleshooting and known limitations
 
 ## Contributing
 
@@ -211,8 +211,3 @@ traits, write tests, and submit a pull request.
 
 MIT. See [LICENSE](LICENSE).
 
-## Support
-
-_If you want to support this project please_
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/absent42)

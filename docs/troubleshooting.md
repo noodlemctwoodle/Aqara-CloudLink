@@ -296,7 +296,7 @@ requirements.
 ## Still stuck?
 
 If none of the above resolves the issue, open a bug report at
-https://github.com/absent42/Aqara-LANLink/issues. Include the following to
+https://github.com/noodlemctwoodle/AqaraLink/issues. Include the following to
 help diagnose the problem:
 
 - The device model string (visible on the device page in Home Assistant under

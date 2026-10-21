@@ -8,7 +8,7 @@ body:
     attributes:
       value: |
         Before opening a bug report, please read the troubleshooting guide:
-        https://github.com/absent42/Aqara-LANLink/blob/main/docs/troubleshooting.md
+        https://github.com/noodlemctwoodle/AqaraLink/blob/main/docs/troubleshooting.md
 
         It covers the most common problems (cannot connect, no state updates,
         missing or oddly-named entities, cameras and two-way audio, PTZ, and
