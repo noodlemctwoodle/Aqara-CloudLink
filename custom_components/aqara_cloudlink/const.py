@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
-DOMAIN: Final = "aqaracloudlink"
+DOMAIN: Final = "aqara_cloudlink"
 
 # The integration whose devices we attach to when it is present. Aqara-LANLink
 # registers devices as `identifiers={("aqara_lanlink", did)}`, so reusing that

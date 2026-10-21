@@ -8,16 +8,16 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.aqaracloudlink import _supported_devices
-from custom_components.aqaracloudlink.cloud import AqaraCloudAuthError
-from custom_components.aqaracloudlink.const import DOMAIN, LANLINK_DOMAIN
-from custom_components.aqaracloudlink.coordinator import (
+from custom_components.aqara_cloudlink import _supported_devices
+from custom_components.aqara_cloudlink.cloud import AqaraCloudAuthError
+from custom_components.aqara_cloudlink.const import DOMAIN, LANLINK_DOMAIN
+from custom_components.aqara_cloudlink.coordinator import (
     AqaraCloudCoordinator,
     CloudDevice,
     _coerce,
 )
-from custom_components.aqaracloudlink.metrics import metrics_for, supported_models
-from custom_components.aqaracloudlink.sensor import _device_info
+from custom_components.aqara_cloudlink.metrics import metrics_for, supported_models
+from custom_components.aqara_cloudlink.sensor import _device_info
 
 PLUG = "lumi.plug.aeu002"
 DID = "lumi.54ef4410014f4b36"
@@ -228,7 +228,7 @@ async def test_entry_sets_up_and_creates_sensors(hass):
 
     from homeassistant.config_entries import ConfigEntryState
 
-    from custom_components.aqaracloudlink.const import CONF_REGION, CONF_TOKEN, CONF_USER_ID
+    from custom_components.aqara_cloudlink.const import CONF_REGION, CONF_TOKEN, CONF_USER_ID
 
     class _Client:
         def __init__(self, *args, **kwargs):
@@ -256,7 +256,7 @@ async def test_entry_sets_up_and_creates_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("custom_components.aqaracloudlink.AqaraCloudClient", _Client):
+    with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -279,3 +279,73 @@ async def test_entry_sets_up_and_creates_sensors(hass):
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+# --------------------------------------------------------------------------
+# credential resolution and error classification
+# --------------------------------------------------------------------------
+
+
+async def test_pasted_token_skips_the_login(hass):
+    """A user id and token together must not spend a login.
+
+    Aqara rate-limits the login endpoint, so this path exists precisely to
+    avoid calling it.
+    """
+    from unittest.mock import patch
+
+    from custom_components.aqara_cloudlink.config_flow import _resolve_tokens
+
+    with patch(
+        "custom_components.aqara_cloudlink.config_flow.AqaraCloudClient"
+    ) as client:
+        tokens = await _resolve_tokens(
+            hass, "EU", {"user_id": "u1", "token": "t1", "email": "e@x", "password": "p"}
+        )
+
+    assert (tokens.user_id, tokens.token) == ("u1", "t1")
+    client.assert_not_called()
+
+
+async def test_email_and_password_logs_in(hass):
+    from unittest.mock import AsyncMock, patch
+
+    from custom_components.aqara_cloudlink.cloud import AqaraTokens
+    from custom_components.aqara_cloudlink.config_flow import _resolve_tokens
+
+    login = AsyncMock(return_value=AqaraTokens("u2", "t2", {}))
+    with patch(
+        "custom_components.aqara_cloudlink.config_flow.AqaraCloudClient"
+    ) as client:
+        client.return_value.login = login
+        tokens = await _resolve_tokens(hass, "EU", {"email": "e@x", "password": "p"})
+
+    login.assert_awaited_once_with("e@x", "p")
+    assert tokens.token == "t2"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"email": "e@x"},                       # password missing
+        {"user_id": "u1"},                      # token missing
+        {"token": "t1"},                        # user id missing
+        {"email": "  ", "password": "p"},       # whitespace is not a value
+    ],
+)
+async def test_incomplete_credentials_rejected(hass, payload):
+    from custom_components.aqara_cloudlink.config_flow import _resolve_tokens
+
+    with pytest.raises(ValueError):
+        await _resolve_tokens(hass, "EU", payload)
+
+
+def test_error_classification():
+    """A rate-limited login must not be reported as invalid credentials."""
+    from custom_components.aqara_cloudlink.cloud import AqaraAuthError
+    from custom_components.aqara_cloudlink.config_flow import _classify
+
+    assert _classify(AqaraCloudAuthError("bad password")) == "invalid_auth"
+    assert _classify(AqaraAuthError("code 106")) == "cannot_connect"
+    assert _classify(RuntimeError("boom")) == "unknown"

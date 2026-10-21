@@ -3,11 +3,13 @@
     "step": {
       "user": {
         "title": "Aqara account",
-        "description": "Sign in to Aqara. Only the session token is stored; your password is not kept.",
+        "description": "Sign in to Aqara, or enter a user ID and token you already hold to skip the login. Only the session token is stored; your password is not kept.",
         "data": {
           "email": "Email",
           "password": "Password",
-          "region": "Region"
+          "region": "Region",
+          "user_id": "Aqara user ID (optional)",
+          "token": "Aqara token (optional)"
         }
       },
       "reauth_confirm": {
@@ -15,14 +17,17 @@
         "description": "The Aqara cloud no longer accepts the stored token. Sign in again for region {region}.",
         "data": {
           "email": "Email",
-          "password": "Password"
+          "password": "Password",
+          "user_id": "Aqara user ID (optional)",
+          "token": "Aqara token (optional)"
         }
       }
     },
     "error": {
       "invalid_auth": "Aqara rejected those credentials.",
       "cannot_connect": "Could not reach the Aqara cloud.",
-      "unknown": "Unexpected error. Check the logs."
+      "unknown": "Unexpected error. Check the logs.",
+      "missing_credentials": "Enter either your email and password, or a user ID and token."
     },
     "abort": {
       "already_configured": "This Aqara account is already set up.",

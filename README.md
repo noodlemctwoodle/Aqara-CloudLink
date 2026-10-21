@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/aqara-cloudlink-icon.png" alt="Aqara CloudLink" width="160">
+</p>
+
 <h1 align="center">Aqara CloudLink</h1>
 
 <p align="center">
@@ -97,7 +101,7 @@ No hub configuration, no LAN access, no go2rtc.
 
 ### Manual
 
-Copy `custom_components/aqaracloudlink/` into your configuration directory and
+Copy `custom_components/aqara_cloudlink/` into your configuration directory and
 restart.
 
 ### Configure
@@ -111,7 +115,7 @@ account are added automatically.
 ## Adding a model
 
 Everything model-specific lives in one table,
-[`metrics.py`](custom_components/aqaracloudlink/metrics.py). Nothing else in the
+[`metrics.py`](custom_components/aqara_cloudlink/metrics.py). Nothing else in the
 integration is model-aware.
 
 To add a device, add its model string with the resource ids the cloud serves
@@ -143,7 +147,7 @@ how you confirmed the values.
 
 ## Credits
 
-The cloud client in [`cloud.py`](custom_components/aqaracloudlink/cloud.py) is
+The cloud client in [`cloud.py`](custom_components/aqara_cloudlink/cloud.py) is
 derived from `hub/cloud_client.py` in
 [absent42/Aqara-LANLink](https://github.com/absent42/Aqara-LANLink) by Dan
 Gibson, MIT licensed. The protocol reverse engineering — request signing,

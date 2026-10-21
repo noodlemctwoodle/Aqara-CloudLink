@@ -10,8 +10,8 @@ CLAUDE.md
 /tests/legacy/
 
 # Test Hardware
-/custom_components/aqaracloudlink/device/models/camera_agl017/
-/custom_components/aqaracloudlink/device/models/gateway.agl014/
+/custom_components/aqara_cloudlink/device/models/camera_agl017/
+/custom_components/aqara_cloudlink/device/models/gateway.agl014/
 
 # Python
 __pycache__/

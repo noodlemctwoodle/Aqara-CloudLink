@@ -1,5 +1,5 @@
 {
-  "domain": "aqaracloudlink",
+  "domain": "aqara_cloudlink",
   "name": "Aqara CloudLink",
   "codeowners": ["@noodlemctwoodle"],
   "config_flow": true,
