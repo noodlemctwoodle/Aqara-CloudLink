@@ -43,7 +43,7 @@ import json
 import logging
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
@@ -150,6 +150,7 @@ _LOGIN_PATH = "/app/v1.0/lumi/user/login"
 _DEVICE_LIST_PATH = "/app/v1.0/lumi/app/position/device/query"
 _TRAIT_READ_PATH = "/app/v1.0/lumi/app/qlink/trait/read"
 _RES_QUERY_BY_RID_PATH = "/app/v1.0/lumi/res/query/by/resourceId"
+_RES_WRITE_PATH = "/app/v1.0/lumi/res/write"
 _VIEW_DATA_QUERY_PATH = "/app/v1.0/lumi/app/view/data/query/new"
 _DEV_QUERY_DETAIL_PATH = "/app/v1.0/lumi/app/dev/query/detail"
 _CUSTOM_ACTION_QUERY_PATH = "/app/v1.0/lumi/app/customaction/query"
@@ -547,6 +548,32 @@ class AqaraCloudClient:
                     continue
                 values[rid] = value
         return values
+
+    async def write_resources(
+        self, token: str, did: str, values: Mapping[str, Any],
+    ) -> None:
+        """Write resource values for one device.
+
+        Calls ``POST /app/v1.0/lumi/res/write`` with body
+        ``{"subjectId": <did>, "data": {<rid>: <value>}}`` - a flat object,
+        unlike the query calls, which wrap theirs in a list. Captured from
+        the Aqara app, which sends integer values rather than strings.
+
+        A success reply carries only ``{"timestamp": ...}``; there is nothing
+        to read back, so this returns None and raises on failure.
+
+        Raises :class:`AqaraAuthError` on auth, HTTP, or server-error
+        responses.
+        """
+        body_dict = {"subjectId": did, "data": dict(values)}
+        body_str = json.dumps(body_dict)
+        url = f"{self._area.server}{_RES_WRITE_PATH}"
+
+        _LOGGER.debug("write_resources: POST %s body=%s", _RES_WRITE_PATH, body_str)
+        payload = await self._signed_request(
+            "POST", url, sign_source=body_str, token=token, body=body_str,
+        )
+        self._raise_if_error(payload)
 
     async def query_view_data(
         self,

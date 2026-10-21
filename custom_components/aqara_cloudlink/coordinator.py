@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .cloud import AqaraCloudAuthError, AqaraCloudClient
@@ -21,7 +21,7 @@ from .const import (
     PRESENT_VALUE_METHOD,
     STATISTICS_METHOD,
 )
-from .metrics import CloudMetric, Transport, metrics_for
+from .metrics import CloudAction, CloudMetric, Transport, actions_for, metrics_for
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,11 @@ class CloudDevice:
     def metrics(self) -> tuple[CloudMetric, ...]:
         """Cloud metrics available for this device's model."""
         return metrics_for(self.model)
+
+    @property
+    def actions(self) -> tuple[CloudAction, ...]:
+        """Cloud writes available for this device's model."""
+        return actions_for(self.model)
 
 
 class AqaraCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]]):
@@ -96,6 +101,29 @@ class AqaraCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, float]]]):
         if not result and self.devices:
             raise UpdateFailed("No device returned a usable value this cycle")
         return result
+
+    async def async_write(self, did: str, values: Mapping[str, Any]) -> None:
+        """Write resource values for one device, then re-read it.
+
+        Raises ConfigEntryAuthFailed on an auth error so Home Assistant can
+        start re-auth, and HomeAssistantError otherwise so the failure
+        surfaces in the UI rather than passing silently.
+        """
+        try:
+            await self._client.write_resources(self._token, did, values)
+        except AqaraCloudAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Aqara cloud rejected the stored token"
+            ) from err
+        except Exception as err:
+            raise HomeAssistantError(
+                f"Aqara cloud rejected the write to {did}: {err}"
+            ) from err
+
+        # The write takes effect on the device a moment later, so the refresh
+        # that follows may still report the old value. It is requested anyway
+        # because the regular poll is a minute away.
+        await self.async_request_refresh()
 
     async def _read_device(self, device: CloudDevice) -> dict[str, Any]:
         """Return every raw value this device's metrics need, keyed by key.

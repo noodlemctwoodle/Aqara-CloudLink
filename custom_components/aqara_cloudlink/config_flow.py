@@ -41,7 +41,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_DEVICE,
 )
-from .metrics import metrics_for
+from .metrics import actions_for, metrics_for
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,13 +144,16 @@ def eligible_devices(
 ) -> list[tuple[str, str, str]]:
     """Return (did, model, name) for devices that can still be added.
 
-    A device is eligible when `metrics` knows cloud-only values for its model
-    and it is not already a subentry. Sorted by name so the picker is stable.
+    A device is eligible when `metrics` knows cloud-only values or writes for
+    its model and it is not already a subentry. Sorted by name so the picker
+    is stable.
     """
     out: list[tuple[str, str, str]] = []
     for record in records:
         did, model = record.get("did"), record.get("model")
-        if not did or not model or did in already or not metrics_for(model):
+        if not did or not model or did in already:
+            continue
+        if not metrics_for(model) and not actions_for(model):
             continue
         out.append((did, model, record.get("deviceName") or model))
     return sorted(out, key=lambda item: item[2].lower())

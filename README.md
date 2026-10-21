@@ -18,7 +18,8 @@ of reading it. But some values the Aqara Home app displays are never served
 locally at all — the hub does not answer for them in any addressing form.
 
 Aqara CloudLink reads those from Aqara's cloud and exposes them as ordinary Home
-Assistant sensors. That is all it does.
+Assistant sensors. It is a reader first: it writes only where the cloud is the
+*only* path to something, and there is exactly one such write today.
 
 It is **not** a replacement for Aqara-LANLink and does not speak the LANLink
 protocol. It makes no local connection to your hub, opens no tunnel, and holds
@@ -75,6 +76,34 @@ cloud: `sdstatus` reads `0` with a working card and `1` with an empty slot
 (note the direction), free space tracks continuous recording minute to minute,
 and the reported totals match the app's own figures. The G400 answers the same
 resource id, so it gets the sensors whether or not a card is fitted.
+
+#### Format SD card — a button, and the only write
+
+> [!WARNING]
+> Pressing it erases every recording on the card. There is no confirmation
+> step and no undo.
+
+The cameras accept a cloud write that reformats the card. It has no local
+equivalent — Aqara-LANLink's model maps carry no entry for it — which is the
+only reason it is here.
+
+It is a config-category entity, so it does not sit among a device's main
+controls, and it is **unavailable unless the card reads healthy**, so it
+cannot be pressed at an empty slot. Every press is logged at warning level.
+
+The resource is write-only: nothing reads back, so the button cannot report
+whether a format succeeded. Watch the capacity and free sensors instead — a
+reformat changes them within about twenty seconds.
+
+If you would rather not have the button at all, remove the model's entry from
+`ACTIONS` in [`metrics.py`](custom_components/aqara_cloudlink/metrics.py).
+
+#### What is deliberately not here
+
+The Aqara app can also toggle Spotlight, Detection Box, Timestamp Overlay,
+Logo watermark and Timelapse Video over the cloud. Aqara-LANLink already
+exposes all five as local switches, so a cloud write for any of them would be
+slower, would need internet, and would gain nothing. They are left alone.
 
 ---
 
@@ -173,6 +202,29 @@ Three optional fields cover the cases the plain form does not:
   is a state rather than a measurement. Add the names under `entity.sensor` in
   `strings.json`, or the dashboard shows the raw option strings. A number not
   in the list leaves the sensor unavailable rather than being guessed at.
+
+### Adding a write
+
+A second table, `ACTIONS`, maps a model to writes the cloud accepts, each
+exposed as a button. The bar is higher than for a sensor: **if Aqara-LANLink
+already controls it, do not add it here.** A cloud write is slower, needs
+internet, and is strictly worse than the local switch that already exists.
+Check `custom_components/aqara_lanlink/device/models/<model>/data.json` before
+adding anything.
+
+```python
+CloudAction(
+    key="14.34.85",
+    value=1,
+    name="Format SD card",
+    translation_key="format_sd_card",
+    available_when=("13.25.85_sdstatus", 0.0),
+)
+```
+
+`available_when` names a metric by its unique suffix and the value it must
+report for the button to be offered. Use it for anything destructive, so the
+action is unreachable when it would be meaningless.
 
 Finding the resource ids for a device means watching what the Aqara app
 requests when you open its page. Pull requests welcome, ideally with a note on

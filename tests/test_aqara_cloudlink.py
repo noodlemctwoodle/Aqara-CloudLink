@@ -22,7 +22,7 @@ from custom_components.aqara_cloudlink.metrics import (
     metrics_for,
     supported_models,
 )
-from custom_components.aqara_cloudlink.sensor import _device_info
+from custom_components.aqara_cloudlink.entity import device_info as _device_info
 
 PLUG = "lumi.plug.aeu002"
 CAMERA = "lumi.camera.agl013"
@@ -37,10 +37,12 @@ def _device(did: str = DID, model: str = PLUG) -> CloudDevice:
 class _FakeClient:
     """Records calls and replays canned responses keyed by read method."""
 
-    def __init__(self, responses=None, raises=None):
+    def __init__(self, responses=None, raises=None, write_raises=None):
         self.responses = responses or {}
         self.raises = raises
+        self.write_raises = write_raises
         self.calls: list[tuple[str, tuple[str, ...], str]] = []
+        self.writes: list[tuple[str, dict]] = []
 
     async def query_view_data(self, token, did, read_keys, process_method):
         self.calls.append((did, tuple(read_keys), process_method))
@@ -53,6 +55,11 @@ class _FakeClient:
         if self.raises is not None:
             raise self.raises
         return self.responses.get("resourceId", {})
+
+    async def write_resources(self, token, did, values):
+        self.writes.append((did, dict(values)))
+        if self.write_raises is not None:
+            raise self.write_raises
 
 
 async def _coordinator(hass, client, devices=None):
@@ -824,3 +831,153 @@ def test_every_enum_metric_has_its_states_translated():
             translated = sensors[key].get("state", {})
             missing = {name for _, name in metric.states} - set(translated)
             assert not missing, f"{key} is missing state strings for {missing}"
+
+
+# --------------------------------------------------------------------------
+# cloud actions - the only writes this integration makes
+# --------------------------------------------------------------------------
+
+CAMERA_DID = "lumi3.b35942fcbb88606d"
+
+
+def _camera_coordinator_args(sd_payload: str):
+    client = _FakeClient({"resourceId": {"13.25.85": sd_payload}})
+    return client, _device(did=CAMERA_DID, model=CAMERA)
+
+
+def test_only_camera_models_have_actions():
+    from custom_components.aqara_cloudlink.metrics import actions_for
+
+    assert actions_for(PLUG) == ()
+    for model in ("lumi.camera.agl005", "lumi.camera.agl013"):
+        actions = actions_for(model)
+        assert len(actions) == 1
+        assert actions[0].key == "14.34.85"
+        assert actions[0].value == 1
+
+
+def test_a_model_with_only_actions_is_still_offered():
+    """Eligibility must not depend on a model having readable metrics."""
+    from custom_components.aqara_cloudlink import metrics as metrics_mod
+
+    records = [{"did": "d1", "model": "lumi.fake.actiononly", "deviceName": "Thing"}]
+    assert eligible_devices(records, set()) == []
+
+    metrics_mod.ACTIONS["lumi.fake.actiononly"] = metrics_mod._CAMERA_ACTIONS
+    try:
+        assert eligible_devices(records, set()) == [
+            ("d1", "lumi.fake.actiononly", "Thing")
+        ]
+    finally:
+        del metrics_mod.ACTIONS["lumi.fake.actiononly"]
+
+
+async def test_format_button_is_unavailable_without_a_card(hass):
+    """The guard that keeps a destructive write out of reach when it is moot."""
+    from custom_components.aqara_cloudlink.button import AqaraCloudActionButton
+
+    client, device = _camera_coordinator_args(SD_ABSENT)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    button = AqaraCloudActionButton(coordinator, device, device.actions[0])
+    assert button.available is False
+
+
+async def test_format_button_is_available_with_a_healthy_card(hass):
+    from custom_components.aqara_cloudlink.button import AqaraCloudActionButton
+
+    client, device = _camera_coordinator_args(SD_HEALTHY)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    button = AqaraCloudActionButton(coordinator, device, device.actions[0])
+    assert button.available is True
+
+
+async def test_pressing_writes_the_captured_payload(hass):
+    """The body must match what the Aqara app sends: rid -> integer."""
+    from custom_components.aqara_cloudlink.button import AqaraCloudActionButton
+
+    client, device = _camera_coordinator_args(SD_HEALTHY)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    await AqaraCloudActionButton(coordinator, device, device.actions[0]).async_press()
+
+    assert client.writes == [(CAMERA_DID, {"14.34.85": 1})]
+
+    # The press requests a debounced refresh; stop it leaving a pending timer.
+    await coordinator.async_shutdown()
+
+
+async def test_write_failure_surfaces_in_the_ui(hass):
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.aqara_cloudlink.button import AqaraCloudActionButton
+
+    client = _FakeClient(
+        {"resourceId": {"13.25.85": SD_HEALTHY}}, write_raises=RuntimeError("nope")
+    )
+    device = _device(did=CAMERA_DID, model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    with pytest.raises(HomeAssistantError):
+        await AqaraCloudActionButton(
+            coordinator, device, device.actions[0]
+        ).async_press()
+
+
+async def test_write_auth_failure_triggers_reauth(hass):
+    from custom_components.aqara_cloudlink.button import AqaraCloudActionButton
+
+    client = _FakeClient(
+        {"resourceId": {"13.25.85": SD_HEALTHY}},
+        write_raises=AqaraCloudAuthError("rejected"),
+    )
+    device = _device(did=CAMERA_DID, model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await AqaraCloudActionButton(
+            coordinator, device, device.actions[0]
+        ).async_press()
+
+
+def test_every_action_has_its_name_translated():
+    """Same guard as for enum sensors: an untranslated key reaches the UI raw."""
+    import json
+    from pathlib import Path
+
+    from custom_components.aqara_cloudlink.metrics import ACTIONS
+
+    strings = json.loads(
+        (
+            Path(__file__).parent.parent
+            / "custom_components/aqara_cloudlink/strings.json"
+        ).read_text()
+    )
+    buttons = strings.get("entity", {}).get("button", {})
+    for model, actions in ACTIONS.items():
+        for action in actions:
+            key = action.translation_key
+            assert key, f"{model} {action.key}: action needs a translation_key"
+            assert key in buttons, f"strings.json has no entity.button.{key}"
+            assert buttons[key].get("name")
+
+
+def test_action_preconditions_name_a_real_metric():
+    """A typo in available_when would silently disable the button forever."""
+    from custom_components.aqara_cloudlink.metrics import ACTIONS, metrics_for
+
+    for model, actions in ACTIONS.items():
+        suffixes = {m.unique_suffix for m in metrics_for(model)}
+        for action in actions:
+            if action.available_when is None:
+                continue
+            key, _ = action.available_when
+            assert key in suffixes, (
+                f"{model}: available_when names {key}, which is not a metric"
+            )

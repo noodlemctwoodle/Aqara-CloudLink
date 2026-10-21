@@ -23,7 +23,7 @@ from .linker import async_track_lanlink_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 type AqaraCloudLinkConfigEntry = ConfigEntry[AqaraCloudCoordinator]
 

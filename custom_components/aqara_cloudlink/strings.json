@@ -66,6 +66,11 @@
           "no_card": "No card"
         }
       }
+    },
+    "button": {
+      "format_sd_card": {
+        "name": "Format SD card"
+      }
     }
   }
 }

@@ -199,11 +199,65 @@ METRICS: dict[str, tuple[CloudMetric, ...]] = {
 }
 
 
+@dataclass(frozen=True, slots=True)
+class CloudAction:
+    """A write the cloud accepts that LANLink has no local path for.
+
+    Attributes:
+        key: Resource id to write.
+        value: Value to write to it.
+        name: Entity name, appended to the device name by Home Assistant.
+        translation_key: Entry under `entity.button` in strings.json.
+        available_when: (metric unique suffix, value) the device must
+            currently report for this action to be offered. Keeps an action
+            unavailable when it would be meaningless or harmful.
+    """
+
+    key: str
+    value: int
+    name: str
+    translation_key: str | None = None
+    available_when: tuple[str, float] | None = None
+
+
+#: Formatting erases every recording on the card. The cloud is the only way
+#: to reach it - LANLink's model maps carry no entry for 14.34.85 - and the
+#: resource is write-only, so there is no state to read back and no undo.
+#:
+#: Identified by timing rather than by name: writing 1 to it was followed
+#: twenty seconds later by 13.25.85 reporting a changed capacity (60318 ->
+#: 60332 MB) and free space reset to the new total. That is a reformat.
+#:
+#: Gated on the card reading healthy, so the button is unavailable when the
+#: slot is empty and the action would do nothing.
+_CAMERA_ACTIONS: tuple[CloudAction, ...] = (
+    CloudAction(
+        key="14.34.85",
+        value=1,
+        name="Format SD card",
+        translation_key="format_sd_card",
+        available_when=("13.25.85_sdstatus", 0.0),
+    ),
+)
+
+
+#: model string -> writes the cloud accepts for it.
+ACTIONS: dict[str, tuple[CloudAction, ...]] = {
+    "lumi.camera.agl005": _CAMERA_ACTIONS,
+    "lumi.camera.agl013": _CAMERA_ACTIONS,
+}
+
+
+def actions_for(model: str) -> tuple[CloudAction, ...]:
+    """Return the cloud actions for a model, or an empty tuple."""
+    return ACTIONS.get(model, ())
+
+
 def metrics_for(model: str) -> tuple[CloudMetric, ...]:
     """Return the cloud metrics for a model, or an empty tuple."""
     return METRICS.get(model, ())
 
 
 def supported_models() -> frozenset[str]:
-    """Return every model this integration can add sensors for."""
-    return frozenset(METRICS)
+    """Return every model this integration has something to offer for."""
+    return frozenset(METRICS) | frozenset(ACTIONS)
