@@ -1,10 +1,12 @@
 {
   "domain": "aqara_cloudlink",
   "name": "Aqara CloudLink",
-  "codeowners": ["@noodlemctwoodle"],
+  "codeowners": [
+    "@noodlemctwoodle"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/noodlemctwoodle/Aqara-CloudLink",
-  "integration_type": "hub",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/noodlemctwoodle/Aqara-CloudLink/issues",
   "requirements": [],

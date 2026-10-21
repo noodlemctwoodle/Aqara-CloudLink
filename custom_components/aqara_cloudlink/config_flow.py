@@ -119,6 +119,17 @@ def _classify(err: Exception) -> str:
     return "unknown"
 
 
+def _entry_title(region: str, user_input: Mapping[str, Any]) -> str:
+    """Name the entry after the account, so several are tellable apart.
+
+    "Aqara cloud (EU)" says nothing about which account it is. The email is
+    the only human-meaningful identifier we have; a pasted user id and token
+    give us none, so those fall back to the region alone.
+    """
+    email = (user_input.get(CONF_EMAIL) or "").strip()
+    return f"{email} ({region})" if email else f"Aqara cloud ({region})"
+
+
 def added_dids(entry: ConfigEntry) -> set[str]:
     """DIDs already added to this entry as device subentries."""
     return {
@@ -177,7 +188,7 @@ class AqaraCloudLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 # Only the token is persisted; the password is never stored.
                 return self.async_create_entry(
-                    title=f"Aqara cloud ({region})",
+                    title=_entry_title(region, user_input),
                     data={
                         CONF_USER_ID: tokens.user_id,
                         CONF_TOKEN: tokens.token,

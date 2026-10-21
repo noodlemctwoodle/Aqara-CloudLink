@@ -601,3 +601,17 @@ async def test_entities_are_not_claimed_for_the_subentry(hass):
     ours = [e for e in er.async_get(hass).entities.values() if e.platform == DOMAIN]
     assert len(ours) == 8, "the sensors must exist"
     assert {e.config_subentry_id for e in ours} == {None}
+
+
+def test_entry_title_names_the_account():
+    """Several accounts must be tellable apart in the UI."""
+    from homeassistant.const import CONF_EMAIL
+
+    from custom_components.aqara_cloudlink.config_flow import _entry_title
+
+    assert _entry_title("EU", {CONF_EMAIL: "someone@example.com"}) == (
+        "someone@example.com (EU)"
+    )
+    # A pasted user id and token give us no human-meaningful identifier.
+    assert _entry_title("EU", {}) == "Aqara cloud (EU)"
+    assert _entry_title("US", {CONF_EMAIL: "   "}) == "Aqara cloud (US)"
