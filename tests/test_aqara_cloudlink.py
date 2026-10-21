@@ -559,13 +559,12 @@ async def test_setup_with_no_subentries_loads_empty(hass):
     assert not [s for s in hass.states.async_all("sensor")
                 if s.entity_id.startswith("sensor.kitchen")]
 
+async def test_entities_are_not_claimed_for_the_subentry(hass):
+    """Entities must NOT claim a subentry.
 
-async def test_entities_are_filed_under_their_subentry(hass):
-    """Entities must belong to the subentry that added the device.
-
-    Without this the device shows under "devices that don't belong to a
-    sub-entry" and the subentry row renders empty, which reads as a failed
-    add even though the sensors exist.
+    They attach to a device owned by Aqara-LANLink's config entry, and
+    claiming a subentry on another entry's device drops them entirely -
+    all eight disappeared from the registry on a live instance.
     """
     from unittest.mock import patch
 
@@ -594,13 +593,11 @@ async def test_entities_are_filed_under_their_subentry(hass):
         ],
     )
     entry.add_to_hass(hass)
-    subentry_id = next(iter(entry.subentries))
 
     with patch("custom_components.aqara_cloudlink.AqaraCloudClient", _Client):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    ours = [e for e in reg.entities.values() if e.platform == DOMAIN]
-    assert len(ours) == 8
-    assert {e.config_subentry_id for e in ours} == {subentry_id}
+    ours = [e for e in er.async_get(hass).entities.values() if e.platform == DOMAIN]
+    assert len(ours) == 8, "the sensors must exist"
+    assert {e.config_subentry_id for e in ours} == {None}
