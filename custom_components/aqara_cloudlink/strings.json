@@ -56,5 +56,16 @@
         "user": "Add a device"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "sd_card_status": {
+        "name": "SD card",
+        "state": {
+          "ok": "OK",
+          "no_card": "No card"
+        }
+      }
+    }
   }
 }

@@ -14,12 +14,18 @@ from custom_components.aqara_cloudlink.const import DOMAIN, LANLINK_DOMAIN
 from custom_components.aqara_cloudlink.coordinator import (
     AqaraCloudCoordinator,
     CloudDevice,
-    _coerce,
+    _values_for,
 )
-from custom_components.aqara_cloudlink.metrics import metrics_for, supported_models
+from custom_components.aqara_cloudlink.metrics import (
+    CloudMetric,
+    Transport,
+    metrics_for,
+    supported_models,
+)
 from custom_components.aqara_cloudlink.sensor import _device_info
 
 PLUG = "lumi.plug.aeu002"
+CAMERA = "lumi.camera.agl013"
 DID = "lumi.54ef4410014f4b36"
 HUB = "lumi3.8333b4a6a7b34e2b"
 
@@ -41,6 +47,12 @@ class _FakeClient:
         if self.raises is not None:
             raise self.raises
         return self.responses.get(process_method, {})
+
+    async def query_resources_by_rid(self, token, did, rids):
+        self.calls.append((did, tuple(rids), "resourceId"))
+        if self.raises is not None:
+            raise self.raises
+        return self.responses.get("resourceId", {})
 
 
 async def _coordinator(hass, client, devices=None):
@@ -156,6 +168,11 @@ async def test_no_devices_is_not_a_failure(hass):
     assert await coordinator._async_update_data() == {}
 
 
+_PLAIN = CloudMetric(
+    key="a", name="A", device_class=None, unit=None, state_class=None
+)
+
+
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
@@ -163,11 +180,12 @@ async def test_no_devices_is_not_a_failure(hass):
         ({"a": ""}, {}),            # never-taken reading
         ({"a": None}, {}),
         ({"a": "abc"}, {}),         # unparseable
-        ({"a": "1", "b": ""}, {"a": 1.0}),
+        ({}, {}),                   # key absent from this cycle
+        ({"a": "1", "b": "9"}, {"a": 1.0}),   # unasked-for keys ignored
     ],
 )
-def test_coerce_keeps_only_numbers(raw, expected):
-    assert _coerce(raw) == expected
+def test_values_keeps_only_numbers(raw, expected):
+    assert _values_for((_PLAIN,), raw) == expected
 
 
 # --------------------------------------------------------------------------
@@ -644,3 +662,165 @@ def test_subentry_strings_declare_only_implemented_flows():
         }
         assert declared <= implemented, f"{name}: {declared - implemented}"
         assert declared, f"{name}: no flow declared, button would be unlabelled"
+
+
+# --------------------------------------------------------------------------
+# camera storage - one resource id, several sensors
+# --------------------------------------------------------------------------
+
+#: Exactly what the cloud returned for a healthy 64 GB card, as a JSON string.
+SD_HEALTHY = '{"freesize":60317,"othersize":0,"sdstatus":0,"totalsize":60318}'
+#: And with the slot empty.
+SD_ABSENT = '{"freesize":0,"othersize":0,"sdstatus":1,"totalsize":0}'
+
+
+def test_camera_metrics_share_one_resource_id():
+    metrics = metrics_for(CAMERA)
+    assert {m.key for m in metrics} == {"13.25.85"}
+    assert {m.field for m in metrics} == {"sdstatus", "totalsize", "freesize"}
+    assert all(m.transport is Transport.RESOURCE_RID for m in metrics)
+    # None of them is a statistics read, despite the underscore rule.
+    assert not any(m.is_statistic for m in metrics)
+
+
+def test_shared_key_metrics_get_distinct_ids():
+    suffixes = {m.unique_suffix for m in metrics_for(CAMERA)}
+    assert suffixes == {
+        "13.25.85_sdstatus", "13.25.85_totalsize", "13.25.85_freesize"
+    }
+
+
+def test_plain_metrics_keep_their_key_as_suffix():
+    """Guards the registry: ids already in use must not change."""
+    assert all(m.unique_suffix == m.key for m in metrics_for(PLUG))
+
+
+def test_json_payload_is_split_across_metrics():
+    values = _values_for(metrics_for(CAMERA), {"13.25.85": SD_HEALTHY})
+    assert values == {
+        "13.25.85_sdstatus": 0.0,
+        "13.25.85_totalsize": 60318.0,
+        "13.25.85_freesize": 60317.0,
+    }
+
+
+def test_sd_status_direction_is_zero_for_healthy():
+    """0 means a working card, 1 means none. Confirmed by pulling the card.
+
+    The intuitive reading is the opposite, so this is pinned deliberately.
+    """
+    status = next(m for m in metrics_for(CAMERA) if m.field == "sdstatus")
+    assert status.label(0) == "ok"
+    assert status.label(1) == "no_card"
+    assert status.label(7) is None       # unknown code, not guessed at
+    assert status.options == ["ok", "no_card"]
+
+
+def test_absent_card_reports_no_card():
+    values = _values_for(metrics_for(CAMERA), {"13.25.85": SD_ABSENT})
+    assert values["13.25.85_sdstatus"] == 1.0
+    assert values["13.25.85_totalsize"] == 0.0
+
+
+def test_malformed_payload_yields_nothing():
+    """A non-JSON body leaves the sensors unavailable rather than wrong."""
+    assert _values_for(metrics_for(CAMERA), {"13.25.85": "not json"}) == {}
+    assert _values_for(metrics_for(CAMERA), {"13.25.85": ""}) == {}
+
+
+def test_missing_field_is_skipped():
+    """A payload without one field still serves the others."""
+    values = _values_for(metrics_for(CAMERA), {"13.25.85": '{"sdstatus":0}'})
+    assert values == {"13.25.85_sdstatus": 0.0}
+
+
+async def test_camera_poll_uses_the_rid_call_once(hass):
+    """The shared resource id is requested once, not once per sensor."""
+    client = _FakeClient({"resourceId": {"13.25.85": SD_HEALTHY}})
+    device = _device(did="lumi3.b35942fcbb88606d", model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    data = await coordinator._async_update_data()
+
+    assert len(client.calls) == 1
+    _, rids, method = client.calls[0]
+    assert method == "resourceId"
+    assert rids == ("13.25.85",)
+    assert data[device.did]["13.25.85_freesize"] == 60317.0
+
+
+async def test_camera_makes_no_view_data_call(hass):
+    """Nothing the camera needs is served by the device-page call."""
+    client = _FakeClient({"resourceId": {"13.25.85": SD_HEALTHY}})
+    device = _device(did="lumi3.b35942fcbb88606d", model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator._async_update_data()
+
+    assert all(method == "resourceId" for _, _, method in client.calls)
+
+
+async def test_sd_status_sensor_reports_a_state_name(hass):
+    """End to end: the enum sensor shows "ok", not 0.0."""
+    from custom_components.aqara_cloudlink.sensor import AqaraCloudSensor
+
+    client = _FakeClient({"resourceId": {"13.25.85": SD_HEALTHY}})
+    device = _device(did="lumi3.b35942fcbb88606d", model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    status, capacity = (
+        next(m for m in metrics_for(CAMERA) if m.field == field)
+        for field in ("sdstatus", "totalsize")
+    )
+
+    assert AqaraCloudSensor(coordinator, device, status).native_value == "ok"
+    assert AqaraCloudSensor(coordinator, device, capacity).native_value == 60318.0
+
+
+async def test_unknown_status_code_leaves_the_sensor_unavailable(hass):
+    """An unmapped number must not be handed to an enum sensor."""
+    from custom_components.aqara_cloudlink.sensor import AqaraCloudSensor
+
+    client = _FakeClient({"resourceId": {"13.25.85": '{"sdstatus":9}'}})
+    device = _device(did="lumi3.b35942fcbb88606d", model=CAMERA)
+    coordinator = await _coordinator(hass, client, [device])
+    await coordinator.async_refresh()
+
+    status = next(m for m in metrics_for(CAMERA) if m.field == "sdstatus")
+    sensor = AqaraCloudSensor(coordinator, device, status)
+    assert sensor.native_value is None
+    assert sensor.available is False
+
+
+def test_every_enum_metric_has_its_states_translated():
+    """Guard for the next model added: an enum with no strings shows raw keys.
+
+    Home Assistant falls back to the option string itself when a state has no
+    translation, so "no_card" would reach the dashboard verbatim. This checks
+    strings.json covers every state of every enum metric.
+    """
+    import json
+    from pathlib import Path
+
+    from custom_components.aqara_cloudlink.metrics import METRICS
+
+    strings = json.loads(
+        (
+            Path(__file__).parent.parent
+            / "custom_components/aqara_cloudlink/strings.json"
+        ).read_text()
+    )
+    sensors = strings.get("entity", {}).get("sensor", {})
+
+    for model, metrics in METRICS.items():
+        for metric in metrics:
+            if not metric.states:
+                assert metric.translation_key is None, (
+                    f"{model} {metric.key}: translation_key without states"
+                )
+                continue
+            key = metric.translation_key
+            assert key, f"{model} {metric.key}: enum metric needs a translation_key"
+            assert key in sensors, f"strings.json has no entity.sensor.{key}"
+            translated = sensors[key].get("state", {})
+            missing = {name for _, name in metric.states} - set(translated)
+            assert not missing, f"{key} is missing state strings for {missing}"

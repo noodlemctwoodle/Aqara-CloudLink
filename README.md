@@ -25,15 +25,16 @@ protocol. It makes no local connection to your hub, opens no tunnel, and holds
 no LANLink session. Run it alongside Aqara-LANLink, or on its own — neither is
 required by the other.
 
-> **Early software.** One device family is covered so far. Adding more is a
-> table entry; see [Adding a model](#adding-a-model).
+> **Early software.** Three models are covered so far. Adding more is a table
+> entry; see [Adding a model](#adding-a-model).
 
 ---
 
 ## What you get
 
-Today, for the **Wall Outlet H2** (`lumi.plug.aeu002`), eight sensors per
-device:
+### Wall Outlet H2 (`lumi.plug.aeu002`) — ten sensors
+
+Per-socket metering, which the app shows and the hub does not serve:
 
 | | Socket 1 | Socket 2 |
 |---|---|---|
@@ -42,16 +43,38 @@ device:
 | Energy today (Wh) | yes | yes |
 | Energy this month (Wh) | yes | yes |
 
-The H2 meters each socket separately and the app shows it, but the hub serves
-only the device totals over LANLink. Probing confirmed there is no local path:
-the per-outlet resources are `EndpointLabel` metadata rather than measurements,
-the obvious per-endpoint trait addresses do not exist, and the legacy resource
-ids the app uses get no reply — bare or instance-suffixed, across every
-endpoint and instance index tried.
+Plus the device's own **energy today** and **energy this month**. LANLink
+serves the running total; these two period figures answer on the cloud alone.
+
+The H2 meters each socket separately, but the hub serves only the device
+totals. Probing confirmed there is no local path: the per-outlet resources are
+`EndpointLabel` metadata rather than measurements, the obvious per-endpoint
+trait addresses do not exist, and the legacy resource ids the app uses get no
+reply — bare or instance-suffixed, across every endpoint and instance index
+tried.
 
 Socket 1 shares an endpoint with the USB-C port, so its figures include USB
 draw. The two sockets sum to slightly under the device total; the difference is
 the USB port plus the plug's own consumption.
+
+### Camera G100 (`lumi.camera.agl005`) and Doorbell Camera G400 (`lumi.camera.agl013`) — three sensors
+
+microSD card state, which no local entity reports:
+
+| Sensor | Values |
+|---|---|
+| SD card | **OK** or **No card** |
+| SD card capacity | MB |
+| SD card free | MB |
+
+Enough to alert on a card that has fallen out, failed, or filled up — the
+failure mode where a camera keeps streaming and quietly records nothing.
+
+Confirmed by inserting, formatting and removing a card while watching the
+cloud: `sdstatus` reads `0` with a working card and `1` with an empty slot
+(note the direction), free space tracks continuous recording minute to minute,
+and the reported totals match the app's own figures. The G400 answers the same
+resource id, so it gets the sensors whether or not a card is fitted.
 
 ---
 
@@ -138,6 +161,18 @@ METRICS: dict[str, tuple[CloudMetric, ...]] = {
 Keys are legacy resource ids (`0.17.85`) or the app's statistics keys
 (`1d_0_0.17.85` for today, `month_0_0.17.85` for this month). Keys containing
 an underscore are read with the statistics method automatically.
+
+Three optional fields cover the cases the plain form does not:
+
+- `transport=Transport.RESOURCE_RID` for a resource id the device-page call
+  will not answer for. Camera storage is one of these.
+- `field="freesize"` when the value arrives as a JSON object and you want one
+  entry from it. Several metrics can share a key this way; the resource is
+  still fetched once per poll.
+- `states=((0, "ok"), (1, "no_card"))` with `translation_key` for a value that
+  is a state rather than a measurement. Add the names under `entity.sensor` in
+  `strings.json`, or the dashboard shows the raw option strings. A number not
+  in the list leaves the sensor unavailable rather than being guessed at.
 
 Finding the resource ids for a device means watching what the Aqara app
 requests when you open its page. Pull requests welcome, ideally with a note on

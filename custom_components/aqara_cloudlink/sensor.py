@@ -87,17 +87,31 @@ class AqaraCloudSensor(CoordinatorEntity[AqaraCloudCoordinator], SensorEntity):
         self._device = device
         self._metric = metric
 
-        self._attr_unique_id = f"{DOMAIN}_{device.did}_{metric.key}"
+        # `unique_suffix` is the metric key unless several metrics share one
+        # resource id, so ids already in the registry are unaffected.
+        self._attr_unique_id = f"{DOMAIN}_{device.did}_{metric.unique_suffix}"
         self._attr_name = metric.name
         self._attr_device_class = metric.device_class
         self._attr_native_unit_of_measurement = metric.unit
         self._attr_state_class = metric.state_class
+        self._attr_options = metric.options
+        self._attr_translation_key = metric.translation_key
         self._attr_device_info = _device_info(coordinator.hass, device)
 
     @property
-    def native_value(self) -> float | None:
-        """Latest polled value, or None if this cycle did not return one."""
-        return self.coordinator.data.get(self._device.did, {}).get(self._metric.key)
+    def native_value(self) -> float | str | None:
+        """Latest polled value, or None if this cycle did not return one.
+
+        A metric with states reports the state name. An unrecognised number
+        reads as None rather than being passed through, since Home Assistant
+        rejects an enum value that is not among the declared options.
+        """
+        value = self.coordinator.data.get(self._device.did, {}).get(
+            self._metric.unique_suffix
+        )
+        if value is None or not self._metric.states:
+            return value
+        return self._metric.label(value)
 
     @property
     def available(self) -> bool:
