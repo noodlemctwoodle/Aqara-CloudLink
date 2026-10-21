@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -349,3 +349,162 @@ def test_error_classification():
     assert _classify(AqaraCloudAuthError("bad password")) == "invalid_auth"
     assert _classify(AqaraAuthError("code 106")) == "cannot_connect"
     assert _classify(RuntimeError("boom")) == "unknown"
+
+
+# --------------------------------------------------------------------------
+# attach-later: the ordering case that split the device card in practice
+# --------------------------------------------------------------------------
+
+
+def _our_device_with_sensor(hass, entry):
+    """Register a device of our own plus one sensor on it, as setup would."""
+    dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, DID)},
+        name="Kitchen Power Socket",
+    )
+    ent = er.async_get(hass).async_get_or_create(
+        "sensor", DOMAIN, f"{DOMAIN}_{DID}_8.0.2293",
+        config_entry=entry, device_id=dev.id,
+    )
+    return dev, ent
+
+
+async def test_relink_moves_entities_when_lanlink_appears(hass):
+    """LANLink arriving later must pull our sensors onto its card."""
+    from custom_components.aqara_cloudlink.linker import async_relink_devices
+
+    ours_entry = MockConfigEntry(domain=DOMAIN, data={})
+    ours_entry.add_to_hass(hass)
+    our_dev, our_ent = _our_device_with_sensor(hass, ours_entry)
+
+    # Aqara-LANLink shows up afterwards.
+    ll_entry = MockConfigEntry(domain=LANLINK_DOMAIN, data={})
+    ll_entry.add_to_hass(hass)
+    ll_dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=ll_entry.entry_id,
+        identifiers={(LANLINK_DOMAIN, DID)},
+        name="Kitchen Power Socket",
+    )
+
+    assert async_relink_devices(hass, [DID]) == 1
+
+    moved = er.async_get(hass).async_get(our_ent.entity_id)
+    assert moved.device_id == ll_dev.id
+    # The card we created in the meantime should be gone, not left empty.
+    assert dr.async_get(hass).async_get(our_dev.id) is None
+
+
+async def test_relink_is_a_no_op_without_lanlink(hass):
+    """With Aqara-LANLink absent, our own device must be left alone."""
+    from custom_components.aqara_cloudlink.linker import async_relink_devices
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    our_dev, our_ent = _our_device_with_sensor(hass, entry)
+
+    assert async_relink_devices(hass, [DID]) == 0
+    assert dr.async_get(hass).async_get(our_dev.id) is not None
+    assert er.async_get(hass).async_get(our_ent.entity_id).device_id == our_dev.id
+
+
+async def test_relink_leaves_other_integrations_entities(hass):
+    """Only our own entities move; a third party's stay put."""
+    from custom_components.aqara_cloudlink.linker import async_relink_devices
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    our_dev, our_ent = _our_device_with_sensor(hass, entry)
+
+    other = MockConfigEntry(domain="someone_else", data={})
+    other.add_to_hass(hass)
+    foreign = er.async_get(hass).async_get_or_create(
+        "sensor", "someone_else", "x1", config_entry=other, device_id=our_dev.id
+    )
+
+    ll_entry = MockConfigEntry(domain=LANLINK_DOMAIN, data={})
+    ll_entry.add_to_hass(hass)
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=ll_entry.entry_id, identifiers={(LANLINK_DOMAIN, DID)}
+    )
+
+    async_relink_devices(hass, [DID])
+
+    assert er.async_get(hass).async_get(foreign.entity_id).device_id == our_dev.id
+    # Something still lives there, so the device must survive.
+    assert dr.async_get(hass).async_get(our_dev.id) is not None
+
+
+async def test_listener_relinks_on_device_registry_event(hass):
+    """The tracker must react to LANLink's device being created."""
+    from custom_components.aqara_cloudlink.linker import async_track_lanlink_devices
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    _, our_ent = _our_device_with_sensor(hass, entry)
+
+    unsub = async_track_lanlink_devices(hass, [DID])
+
+    ll_entry = MockConfigEntry(domain=LANLINK_DOMAIN, data={})
+    ll_entry.add_to_hass(hass)
+    ll_dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=ll_entry.entry_id, identifiers={(LANLINK_DOMAIN, DID)}
+    )
+    await hass.async_block_till_done()
+
+    assert er.async_get(hass).async_get(our_ent.entity_id).device_id == ll_dev.id
+    unsub()
+
+
+async def test_relink_noop_when_already_on_the_lanlink_device(hass):
+    """The happy path - LANLink first - must not be disturbed."""
+    from custom_components.aqara_cloudlink.linker import async_relink_devices
+
+    ll_entry = MockConfigEntry(domain=LANLINK_DOMAIN, data={})
+    ll_entry.add_to_hass(hass)
+    ll_dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=ll_entry.entry_id, identifiers={(LANLINK_DOMAIN, DID)}
+    )
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    ent = er.async_get(hass).async_get_or_create(
+        "sensor", DOMAIN, f"{DOMAIN}_{DID}_8.0.2293", config_entry=entry, device_id=ll_dev.id
+    )
+
+    assert async_relink_devices(hass, [DID]) == 0
+    assert er.async_get(hass).async_get(ent.entity_id).device_id == ll_dev.id
+
+
+async def test_relink_repairs_an_already_split_install(hass):
+    """Repair the state a reload can leave behind.
+
+    Our entities sit on a second device that carries Aqara-LANLink's
+    identifiers without being Aqara-LANLink's device - which is how this
+    installation actually ended up, so the fix has to cope with it rather
+    than only preventing it.
+    """
+    from custom_components.aqara_cloudlink.linker import async_relink_devices
+
+    ll_entry = MockConfigEntry(domain=LANLINK_DOMAIN, data={})
+    ll_entry.add_to_hass(hass)
+    real = dr.async_get(hass).async_get_or_create(
+        config_entry_id=ll_entry.entry_id,
+        identifiers={(LANLINK_DOMAIN, DID)},
+        name="Kitchen Power Socket",
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    stray = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{DID}-stray")},
+        name="Aqara cloud (EU)",
+    )
+    ent = er.async_get(hass).async_get_or_create(
+        "sensor", DOMAIN, f"{DOMAIN}_{DID}_8.0.2293",
+        config_entry=entry, device_id=stray.id,
+    )
+
+    assert async_relink_devices(hass, [DID]) == 1
+    assert er.async_get(hass).async_get(ent.entity_id).device_id == real.id
+    assert dr.async_get(hass).async_get(stray.id) is None

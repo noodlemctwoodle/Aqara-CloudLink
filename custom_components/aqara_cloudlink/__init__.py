@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .cloud import AqaraAuthError, AqaraCloudAuthError, AqaraCloudClient
 from .const import CONF_REGION, CONF_TOKEN, DEFAULT_REGION
 from .coordinator import AqaraCloudCoordinator, CloudDevice
+from .linker import async_track_lanlink_devices
 from .metrics import metrics_for
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +49,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntr
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Our sensors belong on Aqara-LANLink's device card when it has one for the
+    # same DID. Which integration was configured first decides whether that
+    # device exists by the time our entities are created, so keep watching
+    # rather than deciding once.
+    entry.async_on_unload(
+        async_track_lanlink_devices(hass, [device.did for device in devices])
+    )
     return True
 
 
