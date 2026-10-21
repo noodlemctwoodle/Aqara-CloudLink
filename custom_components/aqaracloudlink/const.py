@@ -1,4 +1,4 @@
-"""Constants for the AqaraCloudLink cloud integration."""
+"""Constants for the Aqara CloudLink cloud integration."""
 
 from __future__ import annotations
 

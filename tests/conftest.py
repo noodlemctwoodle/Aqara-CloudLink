@@ -1,4 +1,4 @@
-"""Shared fixtures for AqaraCloudLink tests."""
+"""Shared fixtures for Aqara CloudLink tests."""
 
 from __future__ import annotations
 

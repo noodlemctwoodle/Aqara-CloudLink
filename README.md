@@ -1,4 +1,4 @@
-<h1 align="center">AqaraCloudLink</h1>
+<h1 align="center">Aqara CloudLink</h1>
 
 <p align="center">
   Home Assistant sensors for Aqara values that only the cloud serves.
@@ -13,7 +13,7 @@ Aqara hubs serve most of a device's state over the local network, and
 of reading it. But some values the Aqara Home app displays are never served
 locally at all — the hub does not answer for them in any addressing form.
 
-AqaraCloudLink reads those from Aqara's cloud and exposes them as ordinary Home
+Aqara CloudLink reads those from Aqara's cloud and exposes them as ordinary Home
 Assistant sensors. That is all it does.
 
 It is **not** a replacement for Aqara-LANLink and does not speak the LANLink
@@ -53,7 +53,7 @@ the USB port plus the plug's own consumption.
 
 ## How it works
 
-On setup, AqaraCloudLink logs in to Aqara's regional API, lists the devices on your
+On setup, Aqara CloudLink logs in to Aqara's regional API, lists the devices on your
 account, and keeps the ones whose model it has metrics for. Everything else is
 ignored.
 
@@ -66,9 +66,9 @@ numbers the app shows.
 Only the session token is stored. Your password is not retained.
 
 **Device cards.** If Aqara-LANLink is installed and already owns a device,
-AqaraCloudLink puts its sensors on that same device card rather than creating a
+Aqara CloudLink puts its sensors on that same device card rather than creating a
 duplicate — the cloud readings sit alongside the local ones. If it is not
-installed, AqaraCloudLink registers its own device. This is opportunistic only:
+installed, Aqara CloudLink registers its own device. This is opportunistic only:
 nothing requires Aqara-LANLink to be present, and if you later remove it the
 device survives carrying the cloud sensors.
 
@@ -87,12 +87,12 @@ No hub configuration, no LAN access, no go2rtc.
 
 ### HACS (custom repository)
 
-[![Open HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=noodlemctwoodle&repository=AqaraCloudLink&category=Integration)
+[![Open HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=noodlemctwoodle&repository=Aqara-CloudLink&category=Integration)
 
 1. Click the badge above, or in HACS open the three-dot menu, choose **Custom
-   repositories**, paste `https://github.com/noodlemctwoodle/AqaraCloudLink` and
+   repositories**, paste `https://github.com/noodlemctwoodle/Aqara-CloudLink` and
    select **Integration**.
-2. Find **AqaraCloudLink** and click **Download**.
+2. Find **Aqara CloudLink** and click **Download**.
 3. Restart Home Assistant.
 
 ### Manual
@@ -102,7 +102,7 @@ restart.
 
 ### Configure
 
-**Settings > Devices & Services > Add Integration**, search for **AqaraCloudLink**,
+**Settings > Devices & Services > Add Integration**, search for **Aqara CloudLink**,
 and enter your Aqara email, password and region. Supported devices on the
 account are added automatically.
 

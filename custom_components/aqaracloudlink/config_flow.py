@@ -1,4 +1,4 @@
-"""Config flow for AqaraCloudLink."""
+"""Config flow for Aqara CloudLink."""
 
 from __future__ import annotations
 

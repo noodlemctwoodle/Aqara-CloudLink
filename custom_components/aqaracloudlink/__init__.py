@@ -1,4 +1,4 @@
-"""AqaraCloudLink: Aqara values the cloud serves but LANLink does not."""
+"""Aqara CloudLink: Aqara values the cloud serves but LANLink does not."""
 
 from __future__ import annotations
 
