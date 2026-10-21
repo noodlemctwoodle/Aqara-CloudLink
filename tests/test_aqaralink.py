@@ -1,4 +1,4 @@
-"""Tests for the AqaraLink cloud integration."""
+"""Tests for the AqaraCloudLink cloud integration."""
 
 from __future__ import annotations
 
@@ -8,16 +8,16 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.aqaralink import _supported_devices
-from custom_components.aqaralink.cloud import AqaraCloudAuthError
-from custom_components.aqaralink.const import DOMAIN, LANLINK_DOMAIN
-from custom_components.aqaralink.coordinator import (
+from custom_components.aqaracloudlink import _supported_devices
+from custom_components.aqaracloudlink.cloud import AqaraCloudAuthError
+from custom_components.aqaracloudlink.const import DOMAIN, LANLINK_DOMAIN
+from custom_components.aqaracloudlink.coordinator import (
     AqaraCloudCoordinator,
     CloudDevice,
     _coerce,
 )
-from custom_components.aqaralink.metrics import metrics_for, supported_models
-from custom_components.aqaralink.sensor import _device_info
+from custom_components.aqaracloudlink.metrics import metrics_for, supported_models
+from custom_components.aqaracloudlink.sensor import _device_info
 
 PLUG = "lumi.plug.aeu002"
 DID = "lumi.54ef4410014f4b36"
@@ -228,7 +228,7 @@ async def test_entry_sets_up_and_creates_sensors(hass):
 
     from homeassistant.config_entries import ConfigEntryState
 
-    from custom_components.aqaralink.const import CONF_REGION, CONF_TOKEN, CONF_USER_ID
+    from custom_components.aqaracloudlink.const import CONF_REGION, CONF_TOKEN, CONF_USER_ID
 
     class _Client:
         def __init__(self, *args, **kwargs):
@@ -256,7 +256,7 @@ async def test_entry_sets_up_and_creates_sensors(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("custom_components.aqaralink.AqaraCloudClient", _Client):
+    with patch("custom_components.aqaracloudlink.AqaraCloudClient", _Client):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

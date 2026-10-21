@@ -1,5 +1,5 @@
 name: Bug report
-description: Report something not working as expected in AqaraLink.
+description: Report something not working as expected in AqaraCloudLink.
 labels:
   - bug
   - triage
@@ -23,7 +23,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: AqaraLink version
+      label: AqaraCloudLink version
       description: From HACS, or the `version` field in `manifest.json`.
     validations:
       required: true
@@ -56,7 +56,7 @@ body:
     attributes:
       label: Is Aqara-LANLink also installed?
       description: >
-        AqaraLink attaches its sensors to that integration's device cards when
+        AqaraCloudLink attaches its sensors to that integration's device cards when
         it is present, so it is worth knowing either way.
       options:
         - "Yes"
@@ -74,7 +74,7 @@ body:
         ```yaml
         logger:
           logs:
-            custom_components.aqaralink: debug
+            custom_components.aqaracloudlink: debug
         ```
 
         Redact your token and user id before pasting.

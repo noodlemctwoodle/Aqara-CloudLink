@@ -1,4 +1,4 @@
-"""Config flow for AqaraLink."""
+"""Config flow for AqaraCloudLink."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ STEP_REAUTH_SCHEMA = vol.Schema(
 )
 
 
-class AqaraLinkConfigFlow(ConfigFlow, domain=DOMAIN):
+class AqaraCloudLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Exchange Aqara credentials for a token and store only the token."""
 
     VERSION = 1

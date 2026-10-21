@@ -1,10 +1,10 @@
-"""Constants for the AqaraLink cloud integration."""
+"""Constants for the AqaraCloudLink cloud integration."""
 
 from __future__ import annotations
 
 from typing import Final
 
-DOMAIN: Final = "aqaralink"
+DOMAIN: Final = "aqaracloudlink"
 
 # The integration whose devices we attach to when it is present. Aqara-LANLink
 # registers devices as `identifiers={("aqara_lanlink", did)}`, so reusing that

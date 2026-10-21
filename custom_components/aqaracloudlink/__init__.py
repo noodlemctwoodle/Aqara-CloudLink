@@ -1,4 +1,4 @@
-"""AqaraLink: Aqara values the cloud serves but LANLink does not."""
+"""AqaraCloudLink: Aqara values the cloud serves but LANLink does not."""
 
 from __future__ import annotations
 
@@ -18,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type AqaraLinkConfigEntry = ConfigEntry[AqaraCloudCoordinator]
+type AqaraCloudLinkConfigEntry = ConfigEntry[AqaraCloudCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AqaraLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntry) -> bool:
     """Enumerate the account's devices and start polling the supported ones."""
     client = AqaraCloudClient(entry.data.get(CONF_REGION, DEFAULT_REGION), hass=hass)
     token: str = entry.data[CONF_TOKEN]
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqaraLinkConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AqaraLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AqaraCloudLinkConfigEntry) -> bool:
     """Tear down the platforms; the coordinator stops with the entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
